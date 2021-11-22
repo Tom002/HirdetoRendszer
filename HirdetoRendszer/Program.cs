@@ -1,8 +1,12 @@
 using HirdetoRendszer.Bll.Interfaces;
 using HirdetoRendszer.Dal.DbContext;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
+using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace HirdetoRendszer
@@ -11,26 +15,50 @@ namespace HirdetoRendszer
     {
         public static async Task Main(string[] args)
         {
-            var host = CreateHostBuilder(args).Build();
+            var configuration = new ConfigurationBuilder()
+               .SetBasePath(Directory.GetCurrentDirectory())
+               .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+               .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true, reloadOnChange: true)
+               .Build();
 
-            using (var scope = host.Services.CreateScope())
+            Log.Logger = new LoggerConfiguration()
+                    .ReadFrom.Configuration(configuration)
+                    .CreateLogger();
+
+            try
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<HirdetoRendszerDbContext>();
-                var seedService = scope.ServiceProvider.GetRequiredService<ISeedService>();
+                Log.Information("Starting web host");
 
-                dbContext.Database.EnsureDeleted();
-                dbContext.Database.EnsureCreated();
+                var host = CreateHostBuilder(args).Build();
 
-                await seedService.SeedSzerepkorok();
-                await seedService.SeedFelhasznalok();
-                await seedService.SeedAllomasok();
+                using (var scope = host.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<HirdetoRendszerDbContext>();
+                    var seedService = scope.ServiceProvider.GetRequiredService<ISeedService>();
+
+                    dbContext.Database.EnsureDeleted();
+                    dbContext.Database.EnsureCreated();
+
+                    await seedService.SeedSzerepkorok();
+                    await seedService.SeedFelhasznalok();
+                    await seedService.SeedAllomasok();
+                }
+
+                await host.RunAsync();
             }
-
-            await host.RunAsync();
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Application start-up failed");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
