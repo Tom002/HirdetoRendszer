@@ -21,8 +21,9 @@ namespace HirdetoRendszer
                 dbContext.Database.EnsureDeleted();
                 dbContext.Database.EnsureCreated();
 
-                //await seedService.SeedRoles();
-                //await seedService.SeedUsers();
+                await seedService.SeedSzerepkorok();
+                await seedService.SeedFelhasznalok();
+                await seedService.SeedAllomasok();
             }
 
             await host.RunAsync();

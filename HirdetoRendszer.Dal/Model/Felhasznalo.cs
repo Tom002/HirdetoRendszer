@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
+﻿using HirdetoRendszer.Common.Enum;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace HirdetoRendszer.Dal.Model
 {
@@ -21,5 +19,8 @@ namespace HirdetoRendszer.Dal.Model
 
         [StringLength(200)]
         public string CegCim { get; set; }
+
+        [Required]
+        public FelhasznaloTipus FelhasznaloTipus { get; set; }
     }
 }

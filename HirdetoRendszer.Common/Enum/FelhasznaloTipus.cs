@@ -4,10 +4,10 @@ using System.Text;
 
 namespace HirdetoRendszer.Common.Enum
 {
-    public enum JarmuTipus
+    public enum FelhasznaloTipus
     {
-        Busz = 1,
-        Villamos = 2,
-        Metro = 3
+        Hirdeto = 1,
+        KozlekedesiVallalat = 2,
+        HirdetesSzervezoCeg = 3
     }
 }

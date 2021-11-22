@@ -26,10 +26,7 @@ namespace HirdetoRendszer
 
             services.AddHttpContextAccessor();
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "IT_security_backend", Version = "v1" });
-            });
+            services.AddSwagger();
 
             services.AddBllServices(_configuration);
 
@@ -51,7 +48,7 @@ namespace HirdetoRendszer
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "IT_security_backend v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hirdeto rendszer v1"));
             }
 
             app.UseProblemDetails();

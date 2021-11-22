@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using HirdetoRendszer.Common.Enum;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace HirdetoRendszer.Dal.Model
 {
@@ -13,5 +11,7 @@ namespace HirdetoRendszer.Dal.Model
         [Required]
         [StringLength(100)]
         public string Nev { get; set; }
+
+        public JarmuTipus JarmuTipus { get; set; }
     }
 }

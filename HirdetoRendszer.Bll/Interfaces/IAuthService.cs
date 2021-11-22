@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using HirdetoRendszer.Bll.Dto.Auth;
+using System.Threading.Tasks;
 
 namespace HirdetoRendszer.Bll.Interfaces
 {
     public interface IAuthService
     {
-        //public Task<LoginResponseDto> AdminLogin(SignInDto signInDto);
+        public Task<BejelentkezesValaszDto> Bejelentkezes(BejelentkezesDto bejelentkezesDto);
 
-        //public Task<LoginResponseDto> Login(SignInDto signInDto);
-
-        //public Task<LoginResponseDto> Register(RegistrationDto signInDto);
+        public Task<BejelentkezesValaszDto> HirdetoRegisztracio(HirdetoRegisztracioDto registrationDto);
     }
 }
