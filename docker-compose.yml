@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  hirdetorendszer.api:
+    image: ${DOCKER_REGISTRY-}hirdetorendszerapi
+    build:
+      context: .
+      dockerfile: HirdetoRendszer/Dockerfile

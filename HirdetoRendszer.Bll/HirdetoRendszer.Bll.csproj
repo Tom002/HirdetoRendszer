@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.21" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HirdetoRendszer.Common\HirdetoRendszer.Common.csproj" />
+    <ProjectReference Include="..\HirdetoRendszer.Dal\HirdetoRendszer.Dal.csproj" />
+  </ItemGroup>
+
+</Project>
