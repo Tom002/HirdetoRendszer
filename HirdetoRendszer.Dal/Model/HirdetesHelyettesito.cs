@@ -1,11 +1,12 @@
-﻿using System;
+﻿using HirdetoRendszer.Dal.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HirdetoRendszer.Dal.Model
 {
-    public class HirdetesHelyettesito
+    public class HirdetesHelyettesito : ISoftDelete
     {
         [Key]
         public int HirdetesHelyettesitoId { get; set; }
@@ -22,5 +23,9 @@ namespace HirdetoRendszer.Dal.Model
         public ICollection<KepToHirdetesHelyettesito> HirdetesHelyettesitoKepek { get; set; } = new List<KepToHirdetesHelyettesito>();
 
         public ICollection<HirdetesHelyettesitoToJarmu> HirdetesHelyettesitokToJarmuvek { get; set; } = new List<HirdetesHelyettesitoToJarmu>();
+
+        public bool SoftDeleted { get; set; } = false;
+
+        public DateTime CreatedAt { get; set; }
     }
 }

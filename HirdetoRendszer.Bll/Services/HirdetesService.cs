@@ -66,11 +66,11 @@ namespace HirdetoRendszer.Bll.Services
                 throw new ValidationException(new List<ValidationError> { new ValidationError("VonalIdLista", "Nem minden vonal id érvényes") });
 
             var kepek = await _dbContext.Kepek
-                .Where(kep => hirdetesHozzaadas.HirdetesKepIdLista.Contains(kep.KepId))
+                .Where(kep => hirdetesHozzaadas.KepIdLista.Contains(kep.KepId))
                 .Where(kep => kep.FeltoltoFelhasznaloId == felhasznaloId)
                 .ToListAsync();
 
-            if (kepek.Count() != hirdetesHozzaadas.HirdetesKepIdLista.Count())
+            if (kepek.Count() != hirdetesHozzaadas.KepIdLista.Count())
                 throw new ValidationException(new List<ValidationError> { new ValidationError("HirdetesKepIdLista", "Nem minden kép id érvényes") });
 
             var hirdetes = new Hirdetes()

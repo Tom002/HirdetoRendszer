@@ -17,7 +17,7 @@ namespace HirdetoRendszer.Bll.Dto.Hirdetes
 
         public List<int> VonalIdLista { get; set; } = new List<int>();
 
-        public List<int> HirdetesKepIdLista { get; set; } = new List<int>();
+        public List<int> KepIdLista { get; set; } = new List<int>();
 
         public ElofizetesTipus ElofizetesTipus { get; set; }
 

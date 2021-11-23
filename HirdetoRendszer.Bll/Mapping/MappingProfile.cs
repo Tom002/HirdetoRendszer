@@ -25,6 +25,10 @@ namespace HirdetoRendszer.Bll.Mapping
 
             CreateMap<Hirdetes, HirdetesDto>();
 
+            // Hirdetés helyettesítő
+
+            CreateMap<HirdetesHelyettesito, HirdetesHelyettesitoDto>();
+
             // Kep
 
             CreateMap<KepToHirdetes, KepDto>()

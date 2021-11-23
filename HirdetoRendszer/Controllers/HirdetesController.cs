@@ -29,7 +29,7 @@ namespace HirdetoRendszer.Api.Controllers
 
         [HttpPost("{hirdetesId:int}/lemondas")]
         [Authorize(Roles = "Hirdeto")]
-        public Task HirdetesLemondas(int id) => _hirdetesService.HirdetesLemondas(id);
+        public Task HirdetesLemondas([FromRoute] int id) => _hirdetesService.HirdetesLemondas(id);
         
         [HttpDelete("{hirdetesId:int}")]
         [Authorize(Roles = "HirdetesSzervezoCeg")]

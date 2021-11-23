@@ -151,6 +151,10 @@ namespace HirdetoRendszer.Dal.DbContext
                 .HasForeignKey(hv => hv.VonalId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<HirdetesHelyettesito>()
+                .Property(hh => hh.CreatedAt)
+                .HasDefaultValueSql("getdate()");
+
             base.OnModelCreating(modelBuilder);
         }
     }
