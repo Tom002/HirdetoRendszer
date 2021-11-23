@@ -104,5 +104,14 @@ namespace HirdetoRendszer.Bll.Services
                 .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .ToPagedListAsync(pageRequest);
         }
+
+        public async Task HirdetesTorles(int hirdetesId)
+        {
+            var hirdetes = await _dbContext.Hirdetesek.SingleOrDefaultAsync(h => h.HirdetesId == hirdetesId)
+                ?? throw new EntityNotFoundException($"Hirdetes {hirdetesId} nem található");
+
+            hirdetes.SoftDeleted = true;
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }
