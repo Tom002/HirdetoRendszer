@@ -84,6 +84,13 @@ namespace HirdetoRendszer.Dal.DbContext
                 .HasValue<HaviElofizetes>(ElofizetesTipus.Havi)
                 .HasValue<MennyisegiElofizetes>(ElofizetesTipus.Mennyisegi);
 
+            modelBuilder.Entity<Hirdetes>()
+                .HasOne(h => h.Elofizetes)
+                .WithOne(e => e.Hirdetes)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Hirdetes>().HasQueryFilter(h => !h.SoftDeleted);
+
             modelBuilder.Entity<KepToHirdetes>()
                 .HasKey(kh => new { kh.HirdetesId, kh.KepId });
 

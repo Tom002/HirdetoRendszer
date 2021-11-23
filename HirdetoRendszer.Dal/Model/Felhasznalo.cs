@@ -22,5 +22,8 @@ namespace HirdetoRendszer.Dal.Model
 
         [Required]
         public FelhasznaloTipus FelhasznaloTipus { get; set; }
+
+        [Required]
+        public bool Engedelyezett { get; set; } = true;
     }
 }

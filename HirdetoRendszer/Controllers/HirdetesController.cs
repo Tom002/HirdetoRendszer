@@ -24,11 +24,16 @@ namespace HirdetoRendszer.Api.Controllers
             => _hirdetesService.HirdetesFeladas(hirdetesHozzaadasDto);
 
         [HttpGet]
-        [Authorize(Roles = "Hirdeto")]
+        [Authorize(Roles = "HirdetesSzervezoCeg")]
         public Task<PageResponse<HirdetesDto>> HirdetesekListazasa([FromQuery] PageRequest pageRequest) => _hirdetesService.HirdetesekListazasa(pageRequest);
 
-        [HttpPost("{id}/lemondas")]
+        [HttpPost("{hirdetesId:int}/lemondas")]
         [Authorize(Roles = "Hirdeto")]
         public Task HirdetesLemondas(int id) => _hirdetesService.HirdetesLemondas(id);
+        
+        [HttpDelete("{hirdetesId:int}")]
+        [Authorize(Roles = "HirdetesSzervezoCeg")]
+        public Task HirdetesTorles([FromRoute] int hirdetesId)
+            => _hirdetesService.HirdetesTorles(hirdetesId);
     }
 }

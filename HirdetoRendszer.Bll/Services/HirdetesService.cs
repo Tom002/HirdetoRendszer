@@ -33,6 +33,12 @@ namespace HirdetoRendszer.Bll.Services
         public async Task<HirdetesDto> HirdetesFeladas(HirdetesHozzaadasDto hirdetesHozzaadas)
         {
             var felhasznaloId = _requestContext.FelhasznaloId;
+            var hirdeto = await _dbContext.Users
+                .SingleOrDefaultAsync(f => f.Id == felhasznaloId && f.FelhasznaloTipus == FelhasznaloTipus.Hirdeto)
+                ?? throw new EntityNotFoundException($"Hirdető {felhasznaloId} nem található");
+
+            if (!hirdeto.Engedelyezett)
+                throw new ForbiddenException("Ez a fiók tiltásra került!");
 
             Elofizetes elofizetes;
             if (hirdetesHozzaadas.ElofizetesTipus == ElofizetesTipus.Havi)
@@ -101,20 +107,18 @@ namespace HirdetoRendszer.Bll.Services
 
         public async Task<PageResponse<HirdetesDto>> HirdetesekListazasa(PageRequest pageRequest)
         {
-            var felhasznaloId = _requestContext.FelhasznaloId;
-
             return await _dbContext.Hirdetesek
-                .Where(h => h.FelhasznaloId == felhasznaloId)
                 .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .ToPagedListAsync(pageRequest);
         }
+
         public async Task HirdetesLemondas(int hirdetesId) {
             var felhasznaloId = _requestContext.FelhasznaloId;
 
             var hirdetes = await _dbContext.Hirdetesek
                 .Include(h=>h.Elofizetes)
                 .SingleOrDefaultAsync(h => h.HirdetesId == hirdetesId)
-                ?? throw new EntityNotFoundException("Hirdetés nem található");
+                ?? throw new EntityNotFoundException($"Hirdetés {hirdetesId} nem található");
 
             if (hirdetes.FelhasznaloId != felhasznaloId) {
                 throw new ForbiddenException("Más felhasználó hirdetése nem mondható le");
@@ -130,5 +134,14 @@ namespace HirdetoRendszer.Bll.Services
             await _dbContext.SaveChangesAsync();
         }
 
+
+        public async Task HirdetesTorles(int hirdetesId)
+        {
+            var hirdetes = await _dbContext.Hirdetesek.SingleOrDefaultAsync(h => h.HirdetesId == hirdetesId)
+                ?? throw new EntityNotFoundException($"Hirdetes {hirdetesId} nem található");
+
+            hirdetes.SoftDeleted = true;
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }
