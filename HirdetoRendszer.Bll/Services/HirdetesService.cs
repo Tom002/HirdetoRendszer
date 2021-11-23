@@ -98,14 +98,37 @@ namespace HirdetoRendszer.Bll.Services
                 .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .SingleAsync(h => h.HirdetesId == hirdetes.HirdetesId);
         }
-        public async Task<PageResponse<HirdetesDto>> HirdetesListazas(PageRequest pageRequest)
+
+        public async Task<PageResponse<HirdetesDto>> HirdetesekListazasa(PageRequest pageRequest)
         {
             var felhasznaloId = _requestContext.FelhasznaloId;
 
-            return _dbContext.Hirdetesek
+            return await _dbContext.Hirdetesek
                 .Where(h => h.FelhasznaloId == felhasznaloId)
                 .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .ToPagedListAsync(pageRequest);
         }
+        public async Task HirdetesLemondas(int hirdetesId) {
+            var felhasznaloId = _requestContext.FelhasznaloId;
+
+            var hirdetes = await _dbContext.Hirdetesek
+                .Include(h=>h.Elofizetes)
+                .SingleOrDefaultAsync(h => h.HirdetesId == hirdetesId)
+                ?? throw new EntityNotFoundException("Hirdetés nem található");
+
+            if (hirdetes.FelhasznaloId != felhasznaloId) {
+                throw new ForbiddenException("Más felhasználó hirdetése nem mondható le");
+            }
+
+            if (hirdetes.Elofizetes.ElofizetesTipus != ElofizetesTipus.Havi) {
+                throw new BusinessException("Mennyiségi előfizetésű hirdetés nem mondható le");
+            }
+
+            var haviElofizetes = (HaviElofizetes)hirdetes.Elofizetes;
+            haviElofizetes.Aktiv = false;
+
+            await _dbContext.SaveChangesAsync();
+        }
+
     }
 }

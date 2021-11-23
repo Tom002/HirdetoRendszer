@@ -1,5 +1,6 @@
 ﻿using HirdetoRendszer.Bll.Dto.Hirdetes;
 using HirdetoRendszer.Bll.Interfaces;
+using HirdetoRendszer.Bll.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -24,10 +25,10 @@ namespace HirdetoRendszer.Api.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Hirdeto")]
-        public Task<List<HirdetesDto>> HirdetesekListazasa() => _hirdetesService.HirdetesekListazasa();
+        public Task<PageResponse<HirdetesDto>> HirdetesekListazasa([FromQuery] PageRequest pageRequest) => _hirdetesService.HirdetesekListazasa(pageRequest);
 
         [HttpPost("{id}/lemondas")]
         [Authorize(Roles = "Hirdeto")]
-        public Task<ActionResult> HirdetesLemondas(int id) => _hirdetesService.HirdetesLemondas(id);
+        public Task HirdetesLemondas(int id) => _hirdetesService.HirdetesLemondas(id);
     }
 }
