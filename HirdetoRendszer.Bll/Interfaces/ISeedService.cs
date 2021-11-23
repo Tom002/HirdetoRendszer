@@ -13,5 +13,6 @@ namespace HirdetoRendszer.Bll.Interfaces
         public Task SeedHirdetesKepek();
 
         public Task SeedJarmuvek();
+        Task SeedHirdetesek();
     }
 }

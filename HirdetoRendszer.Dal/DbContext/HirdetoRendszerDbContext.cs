@@ -40,6 +40,8 @@ namespace HirdetoRendszer.Dal.DbContext
 
         public DbSet<AllomasToVonal> AllomasToVonal { get; set; }
 
+        public DbSet<HirdetesToVonal> HirdetesToVonal { get; set; }
+
         public HirdetoRendszerDbContext(DbContextOptions options)
             : base(options)
         {
