@@ -6,6 +6,7 @@ using HirdetoRendszer.Common.Enum;
 using HirdetoRendszer.Common.Exceptions;
 using HirdetoRendszer.Dal.DbContext;
 using HirdetoRendszer.Dal.Model;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -95,5 +96,15 @@ namespace HirdetoRendszer.Bll.Services
                 .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .SingleAsync(h => h.HirdetesId == hirdetes.HirdetesId);
         }
+
+        public Task<List<HirdetesDto>> HirdetesekListazasa() {
+            var felhasznaloId = _requestContext.FelhasznaloId;
+
+            return _dbContext.Hirdetesek
+                .Where(h => h.FelhasznaloId == felhasznaloId)
+                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+        }
+
     }
 }
