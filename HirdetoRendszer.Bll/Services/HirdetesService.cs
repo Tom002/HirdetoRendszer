@@ -32,6 +32,12 @@ namespace HirdetoRendszer.Bll.Services
         public async Task<HirdetesDto> HirdetesFeladas(HirdetesHozzaadasDto hirdetesHozzaadas)
         {
             var felhasznaloId = _requestContext.FelhasznaloId;
+            var hirdeto = await _dbContext.Users
+                .SingleOrDefaultAsync(f => f.Id == felhasznaloId && f.FelhasznaloTipus == FelhasznaloTipus.Hirdeto)
+                ?? throw new EntityNotFoundException($"Hirdető {felhasznaloId} nem található");
+
+            if (!hirdeto.Engedelyezett)
+                throw new ForbiddenException("Ez a fiók tiltásra került!");
 
             Elofizetes elofizetes;
             if (hirdetesHozzaadas.ElofizetesTipus == ElofizetesTipus.Havi)
