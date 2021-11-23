@@ -9,6 +9,7 @@ using HirdetoRendszer.Dal.DbContext;
 using HirdetoRendszer.Dal.Model;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,7 +28,7 @@ namespace HirdetoRendszer.Bll.Services
 
         public async Task<PageResponse<HirdetesHelyettesitoDto>> HirdetesHelyettesitokListazasa(PageRequest pageRequest) {
             return await _dbContext.HirdetesHelyettesitok
-                .ProjectTo<HirdetesHelyettesitoDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<HirdetesHelyettesitoDto>(_mapper.ConfigurationProvider) // TODO: Include navigation properties
                 .ToPagedListAsync(pageRequest);
         }
 
@@ -46,6 +47,18 @@ namespace HirdetoRendszer.Bll.Services
                     HirdetesHelyettesito = hirdetesHelyettesito,
                     Jarmu = jarmu,
                 };
+            }
+
+            var kepek = await _dbContext.Kepek
+                .Where(kep => hirdetesHelyettesitoHozzaadas.KepIdLista.Contains(kep.KepId))
+                .ToListAsync();
+            if (kepek.Count() != hirdetesHelyettesitoHozzaadas.KepIdLista.Count()) {
+                throw new ValidationException(new List<ValidationError> { new ValidationError("KepIdLista", "Nem minden kép id érvényes") });
+            }
+            foreach (var kep in kepek) {
+                hirdetesHelyettesito.HirdetesHelyettesitoKepek.Add(new KepToHirdetesHelyettesito() {
+                    Kep = kep,
+                });
             }
 
             if (hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetOra.HasValue

@@ -71,7 +71,7 @@ namespace HirdetoRendszer.Bll.Services
                 .ToListAsync();
 
             if (kepek.Count() != hirdetesHozzaadas.KepIdLista.Count())
-                throw new ValidationException(new List<ValidationError> { new ValidationError("HirdetesKepIdLista", "Nem minden kép id érvényes") });
+                throw new ValidationException(new List<ValidationError> { new ValidationError("KepIdLista", "Nem minden kép id érvényes") });
 
             var hirdetes = new Hirdetes()
             {
@@ -101,14 +101,14 @@ namespace HirdetoRendszer.Bll.Services
             await _dbContext.SaveChangesAsync();
 
             return await _dbContext.Hirdetesek
-                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider) // TODO: Include navigation properties
                 .SingleAsync(h => h.HirdetesId == hirdetes.HirdetesId);
         }
 
         public async Task<PageResponse<HirdetesDto>> HirdetesekListazasa(PageRequest pageRequest)
         {
             return await _dbContext.Hirdetesek
-                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider) // TODO: Include navigation properties
                 .ToPagedListAsync(pageRequest);
         }
 
