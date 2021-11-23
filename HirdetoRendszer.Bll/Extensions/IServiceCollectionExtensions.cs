@@ -1,5 +1,7 @@
-﻿using HirdetoRendszer.Bll.Interfaces;
+﻿using FluentValidation;
+using HirdetoRendszer.Bll.Interfaces;
 using HirdetoRendszer.Bll.Services;
+using HirdetoRendszer.Bll.Validators.Hirdetes;
 using HirdetoRendszer.Dal.DbContext;
 using HirdetoRendszer.Dal.Model;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,11 +26,10 @@ namespace HirdetoRendszer.Bll.Extensions
 
         public static IServiceCollection AddBllServices(this IServiceCollection services, IConfiguration configuration)
         {
-            // TODO
-            // BLL services should be registered here
-
-            //services.AddScoped<IAuthService, AuthService>();
-            //services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IRequestContext, HttpRequestContext>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IHirdetesService, HirdetesService>();
 
             services.AddTransient<ISeedService, SeedService>();
 
@@ -82,6 +83,14 @@ namespace HirdetoRendszer.Bll.Extensions
             return services;
         }
 
-        
+        public static IServiceCollection ConfigureValidators(this IServiceCollection services, IConfiguration configuration)
+        {
+            foreach (AssemblyScanner.AssemblyScanResult validator in AssemblyScanner.FindValidatorsInAssemblyContaining<HirdetesHozzaadasDtoValidator>())
+                services.AddTransient(validator.InterfaceType, validator.ValidatorType);
+
+            return services;
+        }
+
+
     }
 }

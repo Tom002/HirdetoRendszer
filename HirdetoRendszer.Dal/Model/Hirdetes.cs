@@ -10,19 +10,19 @@ namespace HirdetoRendszer.Dal.Model
         [Key]
         public int HirdetesId { get; set; }
 
-        public int VonalId { get; set; }
-        [ForeignKey("VonalId")]
-        public Vonal Vonal { get; set; }
+        public ICollection<HirdetesToVonal> HirdetesToVonal { get; set; } = new List<HirdetesToVonal>();
 
         public int FelhasznaloId { get; set; }
         [ForeignKey("FelhasznaloId")]
         public Felhasznalo Felhasznalo { get; set; }
 
-        public DateTime? ErvenyessegKezdet { get; set; }
+        [Column(TypeName = "bigint")]
+        public TimeSpan? ErvenyessegKezdet { get; set; }
 
-        public DateTime? ErvenyessegVeg { get; set; }
+        [Column(TypeName = "bigint")]
+        public TimeSpan? ErvenyessegVeg { get; set; }
 
-        public ICollection<HirdetesKep> HirdetesKepek { get; set; } = new List<HirdetesKep>();
+        public ICollection<KepToHirdetes> HirdetesKepek { get; set; } = new List<KepToHirdetes>();
 
         public ICollection<HirdetesFolyamatban> HirdetesekFolyamatban { get; set; } = new List<HirdetesFolyamatban>();
 

@@ -8,6 +8,10 @@ namespace HirdetoRendszer.Bll.Interfaces
 
         public Task SeedFelhasznalok();
 
-        public Task SeedAllomasok();
+        public Task SeedAllomasokAndVonalak();
+
+        public Task SeedHirdetesKepek();
+
+        public Task SeedJarmuvek();
     }
 }

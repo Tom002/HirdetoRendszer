@@ -11,11 +11,11 @@ namespace HirdetoRendszer.Dal.Model
         public int JarmuId { get; set; }
 
         [Required]
-        [StringLength(10)]
+        [StringLength(30)]
         public string Azonosito { get; set; }
 
         public JarmuTipus JarmuTipus { get; set; }
 
-        public ICollection<HirdetesHelyettesitoToJarmu> HirdetesHelyettesitokToJarmuvek { get; set; }
+        public ICollection<HirdetesHelyettesitoToJarmu> HirdetesHelyettesitokToJarmuvek { get; set; } = new List<HirdetesHelyettesitoToJarmu>();
     }
 }

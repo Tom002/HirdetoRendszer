@@ -13,5 +13,7 @@ namespace HirdetoRendszer.Dal.Model
         [Required]
         [StringLength(100)]
         public string Nev { get; set; }
+
+        public ICollection<AllomasToVonal> AllomasToVonal { get; set; } = new List<AllomasToVonal>();
     }
 }

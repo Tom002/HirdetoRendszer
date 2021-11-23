@@ -1,12 +1,12 @@
 using Hellang.Middleware.ProblemDetails;
 using HirdetoRendszer.Api.Extensions;
 using HirdetoRendszer.Bll.Extensions;
+using HirdetoRendszer.Bll.Mapping;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
 
 namespace HirdetoRendszer
 {
@@ -24,11 +24,17 @@ namespace HirdetoRendszer
         {
             services.AddControllers();
 
+            services.AddMvc().AddJsonOptions(options => options.JsonSerializerOptions.IgnoreNullValues = true);
+
             services.AddHttpContextAccessor();
 
             services.AddSwagger();
 
             services.AddBllServices(_configuration);
+
+            services.ConfigureValidators(_configuration);
+
+            services.AddAutoMapper(typeof(MappingProfile));
 
             services.AddProblemDetailsForExceptions(_configuration);
 

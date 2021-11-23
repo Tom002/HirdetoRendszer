@@ -19,6 +19,6 @@ namespace HirdetoRendszer.Dal.Model
         [ForeignKey("JarmuId")]
         public Jarmu Jarmu { get; set; }
 
-        public ICollection<HirdetesFolyamatban> HirdetesekFolyamatban { get; set; }
+        public ICollection<HirdetesFolyamatban> HirdetesekFolyamatban { get; set; } = new List<HirdetesFolyamatban>();
     }
 }
