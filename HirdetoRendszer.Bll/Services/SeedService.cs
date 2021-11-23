@@ -99,7 +99,7 @@ namespace HirdetoRendszer.Bll.Services
                     FelhasznaloTipus = FelhasznaloTipus.HirdetesSzervezoCeg
                 };
                 await _userManager.CreateAsync(hirdetesKezelo, tesztJelszo);
-                await _userManager.AddToRoleAsync(kozlekedesiVallalat, FelhasznaloTipus.HirdetesSzervezoCeg.ToString());
+                await _userManager.AddToRoleAsync(hirdetesKezelo, FelhasznaloTipus.HirdetesSzervezoCeg.ToString());
                 await _dbContext.SaveChangesAsync();
             }
         }
