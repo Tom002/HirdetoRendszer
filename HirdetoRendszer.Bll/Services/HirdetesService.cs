@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using HirdetoRendszer.Bll.Dto.Hirdetes;
+using HirdetoRendszer.Bll.Extensions;
 using HirdetoRendszer.Bll.Interfaces;
+using HirdetoRendszer.Bll.Pagination;
 using HirdetoRendszer.Common.Enum;
 using HirdetoRendszer.Common.Exceptions;
 using HirdetoRendszer.Dal.DbContext;
@@ -96,15 +98,14 @@ namespace HirdetoRendszer.Bll.Services
                 .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .SingleAsync(h => h.HirdetesId == hirdetes.HirdetesId);
         }
-
-        public Task<List<HirdetesDto>> HirdetesekListazasa() {
+        public async Task<PageResponse<HirdetesDto>> HirdetesListazas(PageRequest pageRequest)
+        {
             var felhasznaloId = _requestContext.FelhasznaloId;
 
             return _dbContext.Hirdetesek
                 .Where(h => h.FelhasznaloId == felhasznaloId)
                 .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+                .ToPagedListAsync(pageRequest);
         }
-
     }
 }
