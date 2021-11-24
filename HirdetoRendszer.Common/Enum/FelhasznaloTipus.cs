@@ -8,6 +8,7 @@ namespace HirdetoRendszer.Common.Enum
     {
         Hirdeto = 1,
         KozlekedesiVallalat = 2,
-        HirdetesSzervezoCeg = 3
+        HirdetesSzervezoCeg = 3,
+        FedelzetiRendszer = 4,
     }
 }

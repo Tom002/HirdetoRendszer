@@ -44,7 +44,8 @@ namespace HirdetoRendszer.Bll.Services
             {
                 FelhasznaloTipus.Hirdeto.ToString(),
                 FelhasznaloTipus.KozlekedesiVallalat.ToString(),
-                FelhasznaloTipus.HirdetesSzervezoCeg.ToString()
+                FelhasznaloTipus.HirdetesSzervezoCeg.ToString(),
+                FelhasznaloTipus.FedelzetiRendszer.ToString(),
             };
         }
 
@@ -92,8 +93,7 @@ namespace HirdetoRendszer.Bll.Services
                 await _userManager.AddToRoleAsync(kozlekedesiVallalat, FelhasznaloTipus.KozlekedesiVallalat.ToString());
                 await _dbContext.SaveChangesAsync();
 
-                var hirdetesKezelo = new Felhasznalo
-                {
+                var hirdetesKezelo = new Felhasznalo {
                     Email = "hirdetesKezelo@test.hu",
                     UserName = "hirdetesKezelo@test.hu",
                     KeresztNev = "Ádám",
@@ -103,6 +103,18 @@ namespace HirdetoRendszer.Bll.Services
                 };
                 await _userManager.CreateAsync(hirdetesKezelo, tesztJelszo);
                 await _userManager.AddToRoleAsync(hirdetesKezelo, FelhasznaloTipus.HirdetesSzervezoCeg.ToString());
+                await _dbContext.SaveChangesAsync();
+
+                var fedelzetiRendszer = new Felhasznalo {
+                    Email = "fedelzet@test.hu",
+                    UserName = "fedelzet@test.hu",
+                    KeresztNev = "FR-001",
+                    VezetekNev = "",
+                    EmailConfirmed = true,
+                    FelhasznaloTipus = FelhasznaloTipus.FedelzetiRendszer
+                };
+                await _userManager.CreateAsync(fedelzetiRendszer, tesztJelszo);
+                await _userManager.AddToRoleAsync(fedelzetiRendszer, FelhasznaloTipus.FedelzetiRendszer.ToString());
                 await _dbContext.SaveChangesAsync();
             }
         }
