@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HirdetoRendszer.Bll.Dto.Elofizetes;
 using HirdetoRendszer.Bll.Dto.Hirdetes;
 using HirdetoRendszer.Bll.Dto.Kep;
@@ -36,6 +36,12 @@ namespace HirdetoRendszer.Bll.Mapping
 
             CreateMap<KepToHirdetesHelyettesito, KepDto>()
                 .ForMember(dest => dest.Url, opt => opt.MapFrom(src => src.Kep.Url));
+
+            // Jarmu
+
+            CreateMap<HirdetesHelyettesitoToJarmu, JarmuDto>()
+                .ForMember(dest => dest.Azonosito, opt => opt.MapFrom(src => src.Jarmu.Azonosito))
+                .ForMember(dest => dest.JarmuTipus, opt => opt.MapFrom(src => src.Jarmu.JarmuTipus));
 
             // Elofizetes
 
