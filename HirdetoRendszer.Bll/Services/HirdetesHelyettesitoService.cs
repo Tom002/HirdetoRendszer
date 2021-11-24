@@ -18,11 +18,16 @@ namespace HirdetoRendszer.Bll.Services
     public class HirdetesHelyettesitoService : IHirdetesHelyettesitoService
     {
         private readonly HirdetoRendszerDbContext _dbContext;
+        private readonly IRequestContext _requestContext;
         private readonly IMapper _mapper;
 
-        public HirdetesHelyettesitoService(HirdetoRendszerDbContext dbContext, IMapper mapper)
+        public HirdetesHelyettesitoService(
+            HirdetoRendszerDbContext dbContext,
+            IRequestContext requestContext,
+            IMapper mapper)
         {
             _dbContext = dbContext;
+            _requestContext = requestContext;
             _mapper = mapper;
         }
 
@@ -33,15 +38,22 @@ namespace HirdetoRendszer.Bll.Services
         }
 
         public async Task<HirdetesHelyettesitoDto> HirdetesHelyettesitoLetrehozas(HirdetesHelyettesitoHozzaadasDto hirdetesHelyettesitoHozzaadas) {
+            var felhasznaloId = _requestContext.FelhasznaloId;
+            
             var hirdetesHelyettesito = new HirdetesHelyettesito() {
                 Aktiv = true,
             };
+
             _dbContext.HirdetesHelyettesitok.Add(hirdetesHelyettesito);
 
             var jarmuvek = await _dbContext.Jarmuvek
                 .Where(j => hirdetesHelyettesitoHozzaadas.JarmuIdLista
                 .Contains(j.JarmuId))
                 .ToListAsync();
+
+            if (jarmuvek.Count() != hirdetesHelyettesitoHozzaadas.JarmuIdLista.Count())
+                throw new ValidationException(new List<ValidationError> { new ValidationError("JarmuIdLista", "Nem minden jármű id érvényes") });
+
             foreach (var jarmu in jarmuvek) {
                 var hirdetesHelyettesitoToJarmu = new HirdetesHelyettesitoToJarmu() {
                     HirdetesHelyettesito = hirdetesHelyettesito,
@@ -51,10 +63,12 @@ namespace HirdetoRendszer.Bll.Services
 
             var kepek = await _dbContext.Kepek
                 .Where(kep => hirdetesHelyettesitoHozzaadas.KepIdLista.Contains(kep.KepId))
+                .Where(kep => kep.FeltoltoFelhasznaloId == felhasznaloId)
                 .ToListAsync();
-            if (kepek.Count() != hirdetesHelyettesitoHozzaadas.KepIdLista.Count()) {
+
+            if (kepek.Count() != hirdetesHelyettesitoHozzaadas.KepIdLista.Count())
                 throw new ValidationException(new List<ValidationError> { new ValidationError("KepIdLista", "Nem minden kép id érvényes") });
-            }
+
             foreach (var kep in kepek) {
                 hirdetesHelyettesito.HirdetesHelyettesitoKepek.Add(new KepToHirdetesHelyettesito() {
                     Kep = kep,

@@ -19,17 +19,17 @@ namespace HirdetoRendszer.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "HirdetesSzervezoCeg")]
+        [Authorize(Roles = "KozlekedesiVallalat")]
         public Task<HirdetesHelyettesitoDto> HirdetesHelyettesitoHozzaadas([FromBody] HirdetesHelyettesitoHozzaadasDto hirdetesHelyettesitoHozzaadas)
             => _hirdetesHelyettesitoService.HirdetesHelyettesitoLetrehozas(hirdetesHelyettesitoHozzaadas);
 
         [HttpGet]
-        [Authorize(Roles = "HirdetesSzervezoCeg")]
+        [Authorize(Roles = "KozlekedesiVallalat")]
         public Task<PageResponse<HirdetesHelyettesitoDto>> HirdetesHelyettesitokListazasa([FromQuery] PageRequest pageRequest)
             => _hirdetesHelyettesitoService.HirdetesHelyettesitokListazasa(pageRequest);
 
-        [HttpDelete("hirdetesHelyettesitoId:int")]
-        [Authorize(Roles = "HirdetesSzervezoCeg")]
+        [HttpDelete("{hirdetesHelyettesitoId:int}")]
+        [Authorize(Roles = "KozlekedesiVallalat")]
         public Task HirdetesHelyettesitoTorles([FromRoute] int hirdetesHelyettesitoId)
             => _hirdetesHelyettesitoService.HirdetesHelyettesitoTorles(hirdetesHelyettesitoId);
     }

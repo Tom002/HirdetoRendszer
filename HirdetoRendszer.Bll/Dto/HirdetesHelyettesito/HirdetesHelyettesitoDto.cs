@@ -13,8 +13,8 @@ namespace HirdetoRendszer.Bll.Dto.Hirdetes
 
         public TimeSpan? ErvenyessegVeg { get; set; }
 
-        public List<KepDto> Kepek { get; set; } = new List<KepDto>();
+        public List<KepDto> HirdetesHelyettesitoKepek { get; set; } = new List<KepDto>();
 
-        public List<JarmuDto> Jarmuvek { get; set; } = new List<JarmuDto>();
+        public List<JarmuDto> HirdetesHelyettesitokToJarmuvek { get; set; } = new List<JarmuDto>();
     }
 }
