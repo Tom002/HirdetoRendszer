@@ -1,6 +1,5 @@
-﻿using System;
+﻿using HirdetoRendszer.Bll.Dto.Common;
 using System.Collections.Generic;
-using System.Text;
 
 namespace HirdetoRendszer.Bll.Dto.Fedelzeti {
     public class MegjelenitendoHirdetesHelyettesitoDto {
@@ -8,6 +7,6 @@ namespace HirdetoRendszer.Bll.Dto.Fedelzeti {
 
         public string KepUrl { get; set; }
 
-        // TODO: kötelező időtartamok
+        public List<IdotartamDto> eloirtIdotartamok { get; set; } = new List<IdotartamDto>();
     }
 }

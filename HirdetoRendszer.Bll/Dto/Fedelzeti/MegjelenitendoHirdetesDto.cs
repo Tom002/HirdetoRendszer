@@ -1,6 +1,5 @@
-﻿using System;
+﻿using HirdetoRendszer.Bll.Dto.Common;
 using System.Collections.Generic;
-using System.Text;
 
 namespace HirdetoRendszer.Bll.Dto.Fedelzeti {
     public class MegjelenitendoHirdetesDto
@@ -11,6 +10,6 @@ namespace HirdetoRendszer.Bll.Dto.Fedelzeti {
 
         public double MegjelenitesiSzazalek { get; set; }
 
-        // TODO: engedélyezett időtartamok
+        public List<IdotartamDto> engedelyezettIdotartamok { get; set; } = new List<IdotartamDto>();
     }
 }
