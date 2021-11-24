@@ -55,10 +55,9 @@ namespace HirdetoRendszer.Bll.Services
                 throw new ValidationException(new List<ValidationError> { new ValidationError("JarmuIdLista", "Nem minden jármű id érvényes") });
 
             foreach (var jarmu in jarmuvek) {
-                var hirdetesHelyettesitoToJarmu = new HirdetesHelyettesitoToJarmu() {
-                    HirdetesHelyettesito = hirdetesHelyettesito,
+                hirdetesHelyettesito.HirdetesHelyettesitokToJarmuvek.Add(new HirdetesHelyettesitoToJarmu() {
                     Jarmu = jarmu,
-                };
+                });
             }
 
             var kepek = await _dbContext.Kepek
