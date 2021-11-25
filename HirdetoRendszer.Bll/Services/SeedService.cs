@@ -286,5 +286,31 @@ namespace HirdetoRendszer.Bll.Services
 
             await _dbContext.SaveChangesAsync();
         }
+        public async Task SeedJaratok() {
+            var jarmuIdk = await _dbContext.Jarmuvek.Select(j => j.JarmuId).ToListAsync();
+            var vonalIdk = await _dbContext.Vonalak.Select(j => j.VonalId).ToListAsync();
+            var hirdetesIdk = await _dbContext.Hirdetesek.Select(j => j.HirdetesId).ToListAsync();
+
+            var jaratFaker = new Faker<Jarat>()
+                .RuleFor(j => j.JaratIndulas, f => new TimeSpan(0, f.Random.Number(0, 22), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(j => j.JaratErkezes, (f, current) => new TimeSpan(0, f.Random.Number(current.JaratIndulas.Hours + 1, 23), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(j => j.JarmuId, f => f.PickRandom(jarmuIdk))
+                .RuleFor(j => j.VonalId, f => f.PickRandom(vonalIdk))
+                .RuleFor(j => j.HirdetesekFolyamatban, (f, current) => new List<HirdetesFolyamatban>(
+                    f.PickRandom(hirdetesIdk, f.Random.Number(0, hirdetesIdk.Count)).Select(id =>
+                        new HirdetesFolyamatban {
+                            HirdetesId = id,
+                            Jarat = current,
+                        }
+                    )
+                ));
+
+            for (int i = 0; i < 5; i++) {
+                var jarat = jaratFaker.Generate();
+                _dbContext.Jaratok.Add(jarat);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }
