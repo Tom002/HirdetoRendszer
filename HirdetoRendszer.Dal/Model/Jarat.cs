@@ -19,6 +19,10 @@ namespace HirdetoRendszer.Dal.Model
         [ForeignKey("JarmuId")]
         public Jarmu Jarmu { get; set; }
 
+        public TimeSpan JaratIndulas { get; set; }
+
+        public TimeSpan JaratErkezes { get; set; }
+
         public ICollection<HirdetesFolyamatban> HirdetesekFolyamatban { get; set; } = new List<HirdetesFolyamatban>();
     }
 }

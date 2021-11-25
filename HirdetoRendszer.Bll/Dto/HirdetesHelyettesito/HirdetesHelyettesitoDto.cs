@@ -10,9 +10,13 @@ namespace HirdetoRendszer.Bll.Dto.Hirdetes
     {
         public int HirdetesHelyettesitoId { get; set; }
 
+        public bool IdohozKotott { get; set; }
+
         public IdotartamDto Ervenyesseg { get; set; }
 
         public List<KepDto> HirdetesHelyettesitoKepek { get; set; } = new List<KepDto>();
+
+        public bool MindenJarmure { get; set; }
 
         public List<JarmuDto> HirdetesHelyettesitokToJarmuvek { get; set; } = new List<JarmuDto>();
     }

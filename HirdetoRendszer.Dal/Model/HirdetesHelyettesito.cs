@@ -14,6 +14,8 @@ namespace HirdetoRendszer.Dal.Model
         [Required]
         public bool Aktiv { get; set; }
 
+        public bool IdohozKotott { get; set; }
+
         [Column(TypeName = "bigint")]
         public TimeSpan? ErvenyessegKezdet { get; set; }
 
@@ -21,6 +23,8 @@ namespace HirdetoRendszer.Dal.Model
         public TimeSpan? ErvenyessegVeg { get; set; }
 
         public ICollection<KepToHirdetesHelyettesito> HirdetesHelyettesitoKepek { get; set; } = new List<KepToHirdetesHelyettesito>();
+
+        public bool MindenJarmure { get; set; }
 
         public ICollection<HirdetesHelyettesitoToJarmu> HirdetesHelyettesitokToJarmuvek { get; set; } = new List<HirdetesHelyettesitoToJarmu>();
 

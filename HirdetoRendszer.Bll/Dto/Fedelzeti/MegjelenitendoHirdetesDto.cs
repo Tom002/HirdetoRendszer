@@ -6,7 +6,7 @@ namespace HirdetoRendszer.Bll.Dto.Fedelzeti {
         {
         public int HirdetesId { get; set; }
 
-        public string KepUrl { get; set; }
+        public List<string> KepUrlek { get; set; }
 
         public double MegjelenitesiSzazalek { get; set; }
 

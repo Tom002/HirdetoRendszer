@@ -101,14 +101,14 @@ namespace HirdetoRendszer.Bll.Services
             await _dbContext.SaveChangesAsync();
 
             return await _dbContext.Hirdetesek
-                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider) // TODO: Include navigation properties
+                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .SingleAsync(h => h.HirdetesId == hirdetes.HirdetesId);
         }
 
         public async Task<PageResponse<HirdetesDto>> HirdetesekListazasa(PageRequest pageRequest)
         {
             return await _dbContext.Hirdetesek
-                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider) // TODO: Include navigation properties
+                .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .ToPagedListAsync(pageRequest);
         }
 

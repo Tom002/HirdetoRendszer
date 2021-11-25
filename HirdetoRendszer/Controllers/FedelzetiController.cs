@@ -20,11 +20,11 @@ namespace HirdetoRendszer.Api.Controllers {
         [HttpPost("{jaratId:int}/indul")]
         [Authorize(Roles = "FedelzetiRendszer")]
         public Task<HirdetesCsoportDto> JaratIndul([FromRoute] int jaratId)
-            => throw new NotImplementedException();
+            => _fedelzetiService.JaratInditas(jaratId);
 
         [HttpPost("{jaratId:int}/vege")]
         [Authorize(Roles = "FedelzetiRendszer")]
         public Task JaratVege([FromRoute] int jaratId, [FromBody] List<MegjelenitettHirdetesDto> megjelenitettHirdetesek)
-            => throw new NotImplementedException();
+            => _fedelzetiService.MegjelenitettHirdetesekKonyvelese(jaratId, megjelenitettHirdetesek);
     }
 }

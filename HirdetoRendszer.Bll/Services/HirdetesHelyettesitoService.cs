@@ -33,31 +33,37 @@ namespace HirdetoRendszer.Bll.Services
 
         public async Task<PageResponse<HirdetesHelyettesitoDto>> HirdetesHelyettesitokListazasa(PageRequest pageRequest) {
             return await _dbContext.HirdetesHelyettesitok
-                .ProjectTo<HirdetesHelyettesitoDto>(_mapper.ConfigurationProvider) // TODO: Include navigation properties
+                .ProjectTo<HirdetesHelyettesitoDto>(_mapper.ConfigurationProvider)
                 .ToPagedListAsync(pageRequest);
         }
 
         public async Task<HirdetesHelyettesitoDto> HirdetesHelyettesitoLetrehozas(HirdetesHelyettesitoHozzaadasDto hirdetesHelyettesitoHozzaadas) {
             var felhasznaloId = _requestContext.FelhasznaloId;
-            
+
             var hirdetesHelyettesito = new HirdetesHelyettesito() {
                 Aktiv = true,
+                MindenJarmure = hirdetesHelyettesitoHozzaadas.MindenJarmure,
+                IdohozKotott = hirdetesHelyettesitoHozzaadas.MindenJarmure,
             };
 
             _dbContext.HirdetesHelyettesitok.Add(hirdetesHelyettesito);
 
-            var jarmuvek = await _dbContext.Jarmuvek
-                .Where(j => hirdetesHelyettesitoHozzaadas.JarmuIdLista
-                .Contains(j.JarmuId))
-                .ToListAsync();
+            if (!hirdetesHelyettesitoHozzaadas.MindenJarmure) {
+                var jarmuvek = await _dbContext.Jarmuvek
+                    .Where(j => hirdetesHelyettesitoHozzaadas.JarmuIdLista
+                    .Contains(j.JarmuId))
+                    .ToListAsync();
 
-            if (jarmuvek.Count() != hirdetesHelyettesitoHozzaadas.JarmuIdLista.Count())
-                throw new ValidationException(new List<ValidationError> { new ValidationError("JarmuIdLista", "Nem minden jármű id érvényes") });
+                if (jarmuvek.Count() != hirdetesHelyettesitoHozzaadas.JarmuIdLista.Count())
+                    throw new ValidationException(new List<ValidationError> {
+                        new ValidationError(nameof(hirdetesHelyettesitoHozzaadas.JarmuIdLista), "Nem minden jármű id érvényes")
+                    });
 
-            foreach (var jarmu in jarmuvek) {
-                hirdetesHelyettesito.HirdetesHelyettesitokToJarmuvek.Add(new HirdetesHelyettesitoToJarmu() {
-                    Jarmu = jarmu,
-                });
+                foreach (var jarmu in jarmuvek) {
+                    hirdetesHelyettesito.HirdetesHelyettesitokToJarmuvek.Add(new HirdetesHelyettesitoToJarmu() {
+                        Jarmu = jarmu,
+                    });
+                }
             }
 
             var kepek = await _dbContext.Kepek
@@ -66,7 +72,9 @@ namespace HirdetoRendszer.Bll.Services
                 .ToListAsync();
 
             if (kepek.Count() != hirdetesHelyettesitoHozzaadas.KepIdLista.Count())
-                throw new ValidationException(new List<ValidationError> { new ValidationError("KepIdLista", "Nem minden kép id érvényes") });
+                throw new ValidationException(new List<ValidationError> {
+                    new ValidationError(nameof(hirdetesHelyettesitoHozzaadas.KepIdLista), "Nem minden kép id érvényes")
+                });
 
             foreach (var kep in kepek) {
                 hirdetesHelyettesito.HirdetesHelyettesitoKepek.Add(new KepToHirdetesHelyettesito() {
@@ -74,20 +82,27 @@ namespace HirdetoRendszer.Bll.Services
                 });
             }
 
-            if (hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetOra.HasValue
-                && hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetPerc.HasValue
-                && hirdetesHelyettesitoHozzaadas.ErvenyessegVegOra.HasValue
-                && hirdetesHelyettesitoHozzaadas.ErvenyessegVegPerc.HasValue) {
-                hirdetesHelyettesito.ErvenyessegKezdet = new TimeSpan(
-                    hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetOra.Value,
-                    hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetPerc.Value,
-                    0
-                );
-                hirdetesHelyettesito.ErvenyessegVeg = new TimeSpan(
-                    hirdetesHelyettesitoHozzaadas.ErvenyessegVegOra.Value,
-                    hirdetesHelyettesitoHozzaadas.ErvenyessegVegPerc.Value,
-                    0
-                );
+            if (hirdetesHelyettesitoHozzaadas.IdohozKotott) {
+                if (hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetOra.HasValue
+                    && hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetPerc.HasValue
+                    && hirdetesHelyettesitoHozzaadas.ErvenyessegVegOra.HasValue
+                    && hirdetesHelyettesitoHozzaadas.ErvenyessegVegPerc.HasValue) {
+                    // TODO: validáció hogy a vége később van-e mint az eleje és hogy 00:00 és 23:59 közé esnek-e
+                    hirdetesHelyettesito.ErvenyessegKezdet = new TimeSpan(
+                        hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetOra.Value,
+                        hirdetesHelyettesitoHozzaadas.ErvenyessegKezdetPerc.Value,
+                        0
+                    );
+                    hirdetesHelyettesito.ErvenyessegVeg = new TimeSpan(
+                        hirdetesHelyettesitoHozzaadas.ErvenyessegVegOra.Value,
+                        hirdetesHelyettesitoHozzaadas.ErvenyessegVegPerc.Value,
+                        0
+                    );
+                } else {
+                    throw new ValidationException(new List<ValidationError> {
+                        new ValidationError(nameof(hirdetesHelyettesitoHozzaadas.IdohozKotott), "Nincs minden érvényesség mező kitöltve")
+                    });
+                }
             }
 
             await _dbContext.SaveChangesAsync();
