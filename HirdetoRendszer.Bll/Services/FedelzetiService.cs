@@ -24,6 +24,12 @@ namespace HirdetoRendszer.Bll.Services
             var jarat = await _dbContext.Jaratok.FindAsync(jaratId)
                 ?? throw new EntityNotFoundException($"Járat {jaratId} nem található");
 
+            if (jarat.JaratAllapot != Common.Enum.JaratAllapot.IndulasElott) {
+                throw new BusinessException($"Járat {jaratId} már elindult korábban");
+            }
+
+            jarat.JaratAllapot = Common.Enum.JaratAllapot.Uton;
+
             var menetidoPerc = jarat.JaratErkezes.TotalMinutes - jarat.JaratIndulas.TotalMinutes;
 
             var hirdetesCsoport = new HirdetesCsoportDto() {
@@ -120,7 +126,37 @@ namespace HirdetoRendszer.Bll.Services
         }
 
         public async Task MegjelenitettHirdetesekKonyvelese(int jaratId, List<MegjelenitettHirdetesDto> megjelenitettHirdetesek) {
-            throw new System.NotImplementedException();
+            var jarat = await _dbContext.Jaratok.FindAsync(jaratId)
+                ?? throw new EntityNotFoundException($"Járat {jaratId} nem található");
+
+            if (jarat.JaratAllapot != Common.Enum.JaratAllapot.Uton) {
+                throw new BusinessException($"Járat {jaratId} még nem indult el vagy már visszaért");
+            }
+
+            jarat.JaratAllapot = Common.Enum.JaratAllapot.Visszaert;
+
+            foreach (var megjelenitettHirdetes in megjelenitettHirdetesek) {
+                var hirdetesFolyamatban = await _dbContext.HirdetesekFolyamatban.SingleOrDefaultAsync()
+                    ?? throw new EntityNotFoundException($"Hirdetés {megjelenitettHirdetes.HirdetesId} nem kerülhetett megjelenítésre a járaton");
+
+                if (hirdetesFolyamatban.Hirdetes.Elofizetes.ElofizetesTipus == Common.Enum.ElofizetesTipus.Mennyisegi) {
+                    var mennyisegiElofizetes = (MennyisegiElofizetes)hirdetesFolyamatban.Hirdetes.Elofizetes;
+                    mennyisegiElofizetes.ElhasznaltIdotartam += megjelenitettHirdetes.IdotartamPerc;
+                } else if (hirdetesFolyamatban.Hirdetes.Elofizetes.ElofizetesTipus == Common.Enum.ElofizetesTipus.Havi) {
+                    var haviElofizetes = (HaviElofizetes)hirdetesFolyamatban.Hirdetes.Elofizetes;
+                    var most = new DateTime();
+                    haviElofizetes.HaviElofizetesReszletek.Add(new HaviElofizetesReszletek {
+                        ElhasznaltPercek = megjelenitettHirdetes.IdotartamPerc,
+                        Honap = new DateTime(most.Year, most.Month, 1),
+                    });
+                }
+            }
+
+            _dbContext.HirdetesekFolyamatban.RemoveRange(
+                _dbContext.HirdetesekFolyamatban.Where(hf => hf.Jarat == hf.Jarat)
+            );
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

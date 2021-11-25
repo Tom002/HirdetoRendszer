@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HirdetoRendszer.Common.Enum;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -24,5 +25,7 @@ namespace HirdetoRendszer.Dal.Model
         public TimeSpan JaratErkezes { get; set; }
 
         public ICollection<HirdetesFolyamatban> HirdetesekFolyamatban { get; set; } = new List<HirdetesFolyamatban>();
+
+        public JaratAllapot JaratAllapot { get; set; } = JaratAllapot.IndulasElott;
     }
 }
