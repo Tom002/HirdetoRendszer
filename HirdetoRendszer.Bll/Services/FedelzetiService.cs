@@ -1,4 +1,4 @@
-﻿using HirdetoRendszer.Bll.Dto.Common;
+using HirdetoRendszer.Bll.Dto.Common;
 using HirdetoRendszer.Bll.Dto.Fedelzeti;
 using HirdetoRendszer.Bll.Interfaces;
 using HirdetoRendszer.Common.Exceptions;
@@ -36,7 +36,7 @@ namespace HirdetoRendszer.Bll.Services
                 TervezettMenetidoPerc = (int)menetidoPerc
             };
 
-#region HirdetesHelyettesito
+            #region HirdetesHelyettesito
             var hirdetesHelyettesitokToJarmuvek = _dbContext.HirdetesHelyettesitoToJarmu
                 .Where(hhj => hhj.JarmuId == jarat.JarmuId)
                 .Select(hhj => hhj.HirdetesHelyettesitoId)
@@ -78,9 +78,11 @@ namespace HirdetoRendszer.Bll.Services
 
                 megjelenitendoHirdetesHelyettesitok.Add(megjelenitendoHirdetesHelyettesito);
             }
-#endregion
+            #endregion
 
             // TODO: hirdetések
+
+            await _dbContext.SaveChangesAsync();
 
             return hirdetesCsoport;
         }
