@@ -13,9 +13,13 @@ namespace HirdetoRendszer.Dal.Model
 
         public ICollection<HirdetesToVonal> HirdetesToVonal { get; set; } = new List<HirdetesToVonal>();
 
+        public bool MindenVonalra { get; set; }
+
         public int FelhasznaloId { get; set; }
         [ForeignKey("FelhasznaloId")]
         public Felhasznalo Felhasznalo { get; set; }
+
+        public bool IdohozKotott { get; set; }
 
         [Column(TypeName = "bigint")]
         public TimeSpan? ErvenyessegKezdet { get; set; }

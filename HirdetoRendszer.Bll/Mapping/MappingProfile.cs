@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HirdetoRendszer.Bll.Dto.Common;
 using HirdetoRendszer.Bll.Dto.Elofizetes;
+using HirdetoRendszer.Bll.Dto.Fedelzeti;
 using HirdetoRendszer.Bll.Dto.Hirdetes;
 using HirdetoRendszer.Bll.Dto.Jarmu;
 using HirdetoRendszer.Bll.Dto.Kep;

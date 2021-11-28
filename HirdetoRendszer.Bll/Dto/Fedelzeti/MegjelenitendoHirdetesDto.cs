@@ -10,6 +10,6 @@ namespace HirdetoRendszer.Bll.Dto.Fedelzeti {
 
         public double MegjelenitesiSzazalek { get; set; }
 
-        public List<IdotartamDto> engedelyezettIdotartamok { get; set; } = new List<IdotartamDto>();
+        public List<IdotartamDto> EngedelyezettIdotartamok { get; set; } = new List<IdotartamDto>();
     }
 }

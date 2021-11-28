@@ -4,16 +4,20 @@ namespace HirdetoRendszer.Bll.Interfaces
 {
     public interface ISeedService
     {
-        public Task SeedSzerepkorok();
+        Task SeedSzerepkorok();
 
-        public Task SeedFelhasznalok();
+        Task SeedFelhasznalok();
 
-        public Task SeedAllomasokAndVonalak();
+        Task SeedAllomasokAndVonalak();
 
-        public Task SeedHirdetesKepek();
+        Task SeedHirdetesKepek();
 
-        public Task SeedJarmuvek();
+        Task SeedJarmuvek();
+
+        Task SeedHirdetesHelyettesitok();
+
         Task SeedHirdetesek();
+
         Task SeedJaratok();
     }
 }

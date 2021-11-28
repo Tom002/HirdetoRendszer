@@ -286,6 +286,48 @@ namespace HirdetoRendszer.Bll.Services
 
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task SeedHirdetesHelyettesitok()
+        {
+            var kozlekedesiVallalat = await _authService.GetFelhasznaloByEmail(kozlekedesiVallalatTestFiok);
+            if (kozlekedesiVallalat is null)
+            {
+                return;
+            }
+
+            var jarmuIdk = await _dbContext.Jarmuvek.Select(j => j.JarmuId).ToListAsync();
+            var hirdetesHelyettesitoKepIdk = await _dbContext.Kepek
+                .Where(k => k.FeltoltoFelhasznaloId == kozlekedesiVallalat.Id)
+                .Select(k => k.KepId)
+                .ToListAsync();
+
+            var hirdetesHelyettesitoFaker = new Faker<HirdetesHelyettesito>()
+                .RuleFor(h => h.Aktiv, _ => true)
+                .RuleFor(h => h.CreatedAt, _ => DateTime.Now)
+                .RuleFor(h => h.MindenJarmure, _ => true)
+                .RuleFor(h => h.IdohozKotott, _ => true)
+                .RuleFor(h => h.ErvenyessegKezdet, f => new TimeSpan(0, f.Random.Number(0, 22), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(j => j.ErvenyessegVeg, (f, current) => new TimeSpan(0, f.Random.Number(current.ErvenyessegKezdet.Value.Hours + 1, Math.Min(23, current.ErvenyessegKezdet.Value.Hours + 5)), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(j => j.HirdetesHelyettesitoKepek, (f, current) => new List<KepToHirdetesHelyettesito>(
+                    f.PickRandom(hirdetesHelyettesitoKepIdk, f.Random.Number(0, hirdetesHelyettesitoKepIdk.Count)).Select(id =>
+                        new KepToHirdetesHelyettesito
+                        {
+                            KepId = id,
+                            HirdetesHelyettesito = current
+                        }
+                    )
+                ));
+
+            for (int i = 0; i < 5; i++)
+            {
+                var hirdetesHelyettesito = hirdetesHelyettesitoFaker.Generate();
+                _dbContext.HirdetesHelyettesitok.Add(hirdetesHelyettesito);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+
         public async Task SeedJaratok() {
             var jarmuIdk = await _dbContext.Jarmuvek.Select(j => j.JarmuId).ToListAsync();
             var vonalIdk = await _dbContext.Vonalak.Select(j => j.VonalId).ToListAsync();

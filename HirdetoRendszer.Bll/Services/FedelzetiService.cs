@@ -24,9 +24,8 @@ namespace HirdetoRendszer.Bll.Services
             var jarat = await _dbContext.Jaratok.FindAsync(jaratId)
                 ?? throw new EntityNotFoundException($"Járat {jaratId} nem található");
 
-            if (jarat.JaratAllapot != Common.Enum.JaratAllapot.IndulasElott) {
+            if (jarat.JaratAllapot != Common.Enum.JaratAllapot.IndulasElott)
                 throw new BusinessException($"Járat {jaratId} már elindult korábban");
-            }
 
             jarat.JaratAllapot = Common.Enum.JaratAllapot.Uton;
 
@@ -43,6 +42,7 @@ namespace HirdetoRendszer.Bll.Services
                 .ToHashSet();
 
             var hirdetesHelyettesitok = await _dbContext.HirdetesHelyettesitok
+                .Include(h => h.HirdetesHelyettesitoKepek).ThenInclude(hhk => hhk.Kep)
                 .Where(hh => hh.Aktiv
                     && (
                         hh.MindenJarmure || hirdetesHelyettesitokToJarmuvek.Contains(hh.HirdetesHelyettesitoId)
@@ -53,76 +53,158 @@ namespace HirdetoRendszer.Bll.Services
 
             var megjelenitendoHirdetesHelyettesitok = new List<MegjelenitendoHirdetesHelyettesitoDto>();
 
-            foreach (var hirdetesHelyettesito in hirdetesHelyettesitok) {
-                var megjelenitendoHirdetesHelyettesito = new MegjelenitendoHirdetesHelyettesitoDto() {
+            foreach (var hirdetesHelyettesito in hirdetesHelyettesitok)
+            {
+                var megjelenitendoHirdetesHelyettesito = new MegjelenitendoHirdetesHelyettesitoDto()
+                {
                     HirdetesHelyettesitoId = hirdetesHelyettesito.HirdetesHelyettesitoId,
                     KepUrlek = new List<string>(hirdetesHelyettesito.HirdetesHelyettesitoKepek.Select(hhk => hhk.Kep.Url)),
                     EloirtIdotartamok = new List<IdotartamDto>(),
                 };
 
-                if (hirdetesHelyettesito.IdohozKotott) {
-                    megjelenitendoHirdetesHelyettesito.EloirtIdotartamok.Add(new IdotartamDto() {
+                if (hirdetesHelyettesito.IdohozKotott)
+                {
+                    megjelenitendoHirdetesHelyettesito.EloirtIdotartamok.Add(new IdotartamDto()
+                    {
                         Kezdet = hirdetesHelyettesito.ErvenyessegKezdet.Value,
                         Veg = hirdetesHelyettesito.ErvenyessegVeg.Value,
                     });
-                } else {
-                    megjelenitendoHirdetesHelyettesito.EloirtIdotartamok.Add(new IdotartamDto() {
+                }
+                else
+                {
+                    megjelenitendoHirdetesHelyettesito.EloirtIdotartamok.Add(new IdotartamDto()
+                    {
                         Kezdet = new TimeSpan(0, 0, 0),
                         Veg = new TimeSpan(23, 59, 0),
                     });
                 }
 
-                foreach (var mmh in megjelenitendoHirdetesHelyettesitok) {
+                for (int i = 0; i < megjelenitendoHirdetesHelyettesitok.Count; i++)
+                {
+                    var mmh = megjelenitendoHirdetesHelyettesitok[i];
                     mmh.EloirtIdotartamok = IdotartamKivagas(mmh.EloirtIdotartamok, megjelenitendoHirdetesHelyettesito.EloirtIdotartamok.First());
                 }
 
                 megjelenitendoHirdetesHelyettesitok.Add(megjelenitendoHirdetesHelyettesito);
             }
+
+            megjelenitendoHirdetesHelyettesitok.RemoveAll(hh => !hh.EloirtIdotartamok.Any());
+
             #endregion
 
             // TODO: hirdetések
 
-            await _dbContext.SaveChangesAsync();
+            var helyettesitoIdoablakok = megjelenitendoHirdetesHelyettesitok.SelectMany(hh => hh.EloirtIdotartamok).OrderBy(i => i.Kezdet).ToList();
+            var szukitettHelyettesitoIdoablakok = IdotartamSzukites(helyettesitoIdoablakok, jarat.JaratIndulas, jarat.JaratErkezes);
+            var lehetsegesHirdetesIdotartamok = SzadadIdotartamok(helyettesitoIdoablakok, jarat.JaratIndulas, jarat.JaratErkezes);
+
+            var lehetsegesHirdetesek = await _dbContext.Hirdetesek
+                .Include(h => h.Elofizetes)
+                .Include(h => h.HirdetesekFolyamatban)
+                .Where(h => h.MindenVonalra || h.HirdetesToVonal.Any(h => h.VonalId == jarat.VonalId))
+                .Where(h => 
+                    !h.IdohozKotott ||
+                    (h.ErvenyessegKezdet.Value < jarat.JaratErkezes && h.ErvenyessegKezdet.Value >= jarat.JaratIndulas) ||
+                    (h.ErvenyessegVeg.Value > jarat.JaratIndulas && h.ErvenyessegVeg.Value <= jarat.JaratErkezes))
+                .ToListAsync();
+
+
+            // await _dbContext.SaveChangesAsync();
 
             return hirdetesCsoport;
         }
 
-        private List<IdotartamDto> IdotartamKivagas(List<IdotartamDto> regiIdotartamok, IdotartamDto ujIdotartam) {
-            var minute = new TimeSpan(0, 1, 0);
-            var ujIdotartamok = new List<IdotartamDto>();
-            foreach (var regiIdotartam in regiIdotartamok) {
-                if (regiIdotartam.Kezdet < ujIdotartam.Veg || regiIdotartam.Veg < ujIdotartam.Kezdet ) {
-                    // Nincs átfedés
-                    ujIdotartamok.Add(regiIdotartam);
-                } else if (regiIdotartam.Kezdet <= ujIdotartam.Kezdet && regiIdotartam.Veg <= ujIdotartam.Veg) {
-                    // Régi időtartam teljesen tartalmazza az új időtartamot
-                    ujIdotartamok.Add(new IdotartamDto {
-                        Kezdet = regiIdotartam.Kezdet,
-                        Veg = ujIdotartam.Kezdet.Subtract(minute),
-                    });
-                    ujIdotartamok.Add(new IdotartamDto {
-                        Kezdet = ujIdotartam.Veg.Add(minute),
-                        Veg = regiIdotartam.Veg,
-                    });
-                } else if (regiIdotartam.Kezdet <= ujIdotartam.Veg) {
-                    // Részleges átfedés, a régi időtartam elejét vágjuk le
-                    ujIdotartamok.Add(new IdotartamDto {
-                        Kezdet = ujIdotartam.Veg.Add(minute),
-                        Veg = regiIdotartam.Veg,
-                    });
-                } else if (regiIdotartam.Veg <= ujIdotartam.Kezdet) {
-                    // Részleges átfedés, a régi időtartam végét vágjuk le
-                    ujIdotartamok.Add(new IdotartamDto {
-                        Kezdet = regiIdotartam.Kezdet,
-                        Veg = ujIdotartam.Kezdet.Subtract(minute),
-                    });
-                }
-                // Ha keletkezett üres időtartam, megszabadulunk tőle
-                for (int i = ujIdotartamok.Count - 1; i >= 0; i--) {
-                    if (ujIdotartamok[i].Kezdet == ujIdotartam.Veg) {
-                        ujIdotartamok.RemoveAt(i);
+        private List<IdotartamDto> IdotartamSzukites(List<IdotartamDto> foglaltIdotartamok, TimeSpan idoszakKezdet, TimeSpan idoszakVeg)
+            => foglaltIdotartamok
+                .Select(i =>
+                    new IdotartamDto
+                    {
+                        Kezdet = i.Kezdet < idoszakKezdet ? idoszakKezdet : i.Kezdet,
+                        Veg = i.Veg > idoszakVeg ? idoszakVeg : i.Veg
+                    })
+                .ToList();
+
+        private List<IdotartamDto> SzadadIdotartamok(List<IdotartamDto> foglaltIdotartamok, TimeSpan idoszakKezdet, TimeSpan idoszakVeg)
+        {
+            var szabadIdotartamok = new List<IdotartamDto>();
+            if (foglaltIdotartamok.Any())
+            {
+                var elsoFoglaltIdotartam = foglaltIdotartamok.First();
+                szabadIdotartamok.Add(new IdotartamDto { Kezdet = idoszakKezdet, Veg = elsoFoglaltIdotartam.Kezdet });
+
+                foreach (var foglaltIdotartam in foglaltIdotartamok.Select((Ertek, Index) => new { Ertek, Index }))
+                {
+                    // Ha az utolsó elemet dolgozzuk fel
+                    if (foglaltIdotartam.Index == foglaltIdotartamok.Count - 1)
+                    {
+                        szabadIdotartamok.Add(new IdotartamDto { Kezdet = foglaltIdotartam.Ertek.Veg, Veg = idoszakVeg });
+                    }
+                    else
+                    {
+                        var kovetkezoFoglaltIdotartam = foglaltIdotartamok[foglaltIdotartam.Index + 1];
+                        szabadIdotartamok.Add(new IdotartamDto { Kezdet = foglaltIdotartam.Ertek.Veg, Veg = kovetkezoFoglaltIdotartam.Kezdet });
                     }
                 }
+
+                szabadIdotartamok.RemoveAll(i => i.Kezdet == i.Veg);
+            }
+            else
+            {
+                szabadIdotartamok.Add(new IdotartamDto { Kezdet = idoszakKezdet, Veg = idoszakVeg });
+            }
+
+            return szabadIdotartamok;
+        }
+
+        private List<IdotartamDto> IdotartamKivagas(List<IdotartamDto> regiIdotartamok, IdotartamDto ujIdotartam)
+        {
+            var ujIdotartamok = new List<IdotartamDto>();
+            foreach (var regiIdotartam in regiIdotartamok)
+            {
+                if (ujIdotartam.Veg < regiIdotartam.Kezdet || ujIdotartam.Kezdet > regiIdotartam.Veg)
+                {
+                    // Nincs átfedés
+                    ujIdotartamok.Add(regiIdotartam);
+                }
+                else if (ujIdotartam.Kezdet >= regiIdotartam.Kezdet && ujIdotartam.Veg <= regiIdotartam.Veg)
+                {
+                    // Régi időtartam teljesen tartalmazza az új időtartamot
+                    ujIdotartamok.Add(new IdotartamDto
+                    {
+                        Kezdet = regiIdotartam.Kezdet,
+                        Veg = ujIdotartam.Kezdet
+                    });
+                    ujIdotartamok.Add(new IdotartamDto
+                    {
+                        Kezdet = ujIdotartam.Veg,
+                        Veg = regiIdotartam.Veg,
+                    });
+                }
+                else if (ujIdotartam.Veg > regiIdotartam.Kezdet && ujIdotartam.Veg <= regiIdotartam.Veg)
+                {
+                    // Részleges átfedés, a régi időtartam elejét vágjuk le
+                    ujIdotartamok.Add(new IdotartamDto
+                    {
+                        Kezdet = ujIdotartam.Veg,
+                        Veg = regiIdotartam.Veg,
+                    });
+                }
+                else if (ujIdotartam.Kezdet >= regiIdotartam.Kezdet && ujIdotartam.Kezdet < regiIdotartam.Veg)
+                {
+                    // Részleges átfedés, a régi időtartam végét vágjuk le
+                    ujIdotartamok.Add(new IdotartamDto
+                    {
+                        Kezdet = regiIdotartam.Kezdet,
+                        Veg = ujIdotartam.Kezdet
+                    });
+                }
+                else if (ujIdotartam.Kezdet <= regiIdotartam.Kezdet && ujIdotartam.Kezdet >= regiIdotartam.Veg)
+                {
+                    // Új időtartam teljesen tartalmazaz a régit
+                }
+
+                // Ha keletkezett üres időtartam, megszabadulunk tőle
+                ujIdotartamok.RemoveAll(i => i.Kezdet == i.Veg);
             }
             return ujIdotartamok;
         }
