@@ -190,11 +190,16 @@ namespace HirdetoRendszer.Bll.Services
                         if (elofizetes == null)
                             continue;
 
-                        lehetsegesHirdetesekMaxHosszal.Add(new LehetsegesHirdetesDto
+                        var lh = new LehetsegesHirdetesDto
                         {
                             HirdetesId = lehetsegesHirdetes.HirdetesId,
                             MaxIdotartam = elofizetes.VasaroltIdotartam - folyamatbanLevoHirdetesekHossza - elofizetes.ElhasznaltIdotartam
-                        });
+                        };
+
+                        if(lh.MaxIdotartam > 0)
+                        {
+                            lehetsegesHirdetesekMaxHosszal.Add(lh);
+                        }
                     }
                 }
 
@@ -229,7 +234,7 @@ namespace HirdetoRendszer.Bll.Services
                         {
                             JaratId = jarat.JaratId,
                             HirdetesId = hirdetes.HirdetesId,
-                            LefoglaltPerc = megjelenitentoHirdetes.EngedelyezettIdotartamHossz
+                            LefoglaltPerc = Math.Min(megjelenitentoHirdetes.EngedelyezettIdotartamHossz, megjelenitentoHirdetes.MaxMegjelenitesPerc)
                         });
                     }
                 }
@@ -422,26 +427,43 @@ namespace HirdetoRendszer.Bll.Services
 
             jarat.JaratAllapot = JaratAllapot.Visszaert;
 
+            var hirdetesekFolyamatban = await _dbContext.HirdetesekFolyamatban
+                .Include(h => h.Hirdetes).ThenInclude(h => h.Elofizetes)
+                .Where(hf => hf.JaratId == jarat.JaratId)
+                .ToListAsync();
+
+            var haviElofizetesek = await _dbContext.HaviElofizetesek
+                .Include(h => h.HaviElofizetesReszletek)
+                .Where(h => hirdetesekFolyamatban.Select(hf => hf.HirdetesId).Contains(h.HirdetesId))
+                .ToListAsync();
+
+            var mennyisegiElofizetesek = await _dbContext.MennyisegiElofizetesek
+                .Where(h => hirdetesekFolyamatban.Select(hf => hf.HirdetesId).Contains(h.HirdetesId))
+                .ToListAsync();
+
             foreach (var megjelenitettHirdetes in megjelenitettHirdetesek) {
-                var hirdetesFolyamatban = await _dbContext.HirdetesekFolyamatban.SingleOrDefaultAsync()
+
+                var hirdetesFolyamatban = hirdetesekFolyamatban.SingleOrDefault()
                     ?? throw new EntityNotFoundException($"Hirdetés {megjelenitettHirdetes.HirdetesId} nem kerülhetett megjelenítésre a járaton");
 
-                if (hirdetesFolyamatban.Hirdetes.Elofizetes.ElofizetesTipus == ElofizetesTipus.Mennyisegi) {
-                    var mennyisegiElofizetes = (MennyisegiElofizetes)hirdetesFolyamatban.Hirdetes.Elofizetes;
+                if (hirdetesFolyamatban.Hirdetes.Elofizetes.ElofizetesTipus == ElofizetesTipus.Mennyisegi) 
+                {
+                    var mennyisegiElofizetes = mennyisegiElofizetesek.Single(me => me.HirdetesId == hirdetesFolyamatban.HirdetesId);
                     mennyisegiElofizetes.ElhasznaltIdotartam += megjelenitettHirdetes.IdotartamPerc;
-                } else if (hirdetesFolyamatban.Hirdetes.Elofizetes.ElofizetesTipus == ElofizetesTipus.Havi) {
-                    var haviElofizetes = (HaviElofizetes)hirdetesFolyamatban.Hirdetes.Elofizetes;
-                    var most = new DateTime();
-                    haviElofizetes.HaviElofizetesReszletek.Add(new HaviElofizetesReszletek {
-                        ElhasznaltPercek = megjelenitettHirdetes.IdotartamPerc,
-                        Honap = new DateTime(most.Year, most.Month, 1),
-                    });
+                } 
+                else if (hirdetesFolyamatban.Hirdetes.Elofizetes.ElofizetesTipus == ElofizetesTipus.Havi) 
+                {
+                    var haviElofizetes = haviElofizetesek.Single(me => me.HirdetesId == hirdetesFolyamatban.HirdetesId);
+                    var jaratDatum = jarat.Datum;
+
+                    var haviElofizetesReszletekToUpdate = haviElofizetes.HaviElofizetesReszletek
+                        .Single(her => her.Honap.Date.Year == jaratDatum.Year && her.Honap.Date.Month == jaratDatum.Month);
+
+                    haviElofizetesReszletekToUpdate.ElhasznaltPercek += megjelenitettHirdetes.IdotartamPerc;
                 }
             }
 
-            _dbContext.HirdetesekFolyamatban.RemoveRange(
-                _dbContext.HirdetesekFolyamatban.Where(hf => hf.Jarat == hf.Jarat)
-            );
+            _dbContext.HirdetesekFolyamatban.RemoveRange(hirdetesekFolyamatban);
 
             await _dbContext.SaveChangesAsync();
         }
