@@ -10,6 +10,8 @@ namespace HirdetoRendszer.Bll.Dto.Fedelzeti {
 
         public double MegjelenitesiSzazalek { get; set; }
 
+        public int MaxMegjelenitesPerc { get; set; }
+
         public List<IdotartamDto> EngedelyezettIdotartamok { get; set; } = new List<IdotartamDto>();
     }
 }

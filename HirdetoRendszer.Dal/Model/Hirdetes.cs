@@ -33,6 +33,8 @@ namespace HirdetoRendszer.Dal.Model
 
         public Elofizetes Elofizetes { get; set; }
 
+        public DateTime LetrehozasDatum { get; set; }
+
         public bool SoftDeleted { get; set; } = false;
     }
 }

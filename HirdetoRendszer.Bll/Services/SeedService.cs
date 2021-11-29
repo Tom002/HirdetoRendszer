@@ -215,6 +215,7 @@ namespace HirdetoRendszer.Bll.Services
                 .RuleFor(me => me.VasaroltIdotartam, (f, current) => f.Random.Number(current.ElhasznaltIdotartam, 1100));
 
             var hirdetesFaker = new Faker<Hirdetes>()
+                .RuleFor(h => h.IdohozKotott, _ => true)
                 .RuleFor(h => h.ErvenyessegKezdet, f => new TimeSpan(0, f.Random.Number(0, 22), f.Random.Number(0, 59), 0, 0))
                 .RuleFor(h => h.ErvenyessegVeg, (f, current) => new TimeSpan(0, f.Random.Number(current.ErvenyessegKezdet.Value.Hours + 1, 23), f.Random.Number(0, 59), 0, 0));
 
@@ -334,18 +335,11 @@ namespace HirdetoRendszer.Bll.Services
             var hirdetesIdk = await _dbContext.Hirdetesek.Select(j => j.HirdetesId).ToListAsync();
 
             var jaratFaker = new Faker<Jarat>()
+                .RuleFor(j => j.Datum, f => f.Date.Future(yearsToGoForward: 1))
                 .RuleFor(j => j.JaratIndulas, f => new TimeSpan(0, f.Random.Number(0, 22), f.Random.Number(0, 59), 0, 0))
                 .RuleFor(j => j.JaratErkezes, (f, current) => new TimeSpan(0, f.Random.Number(current.JaratIndulas.Hours + 1, 23), f.Random.Number(0, 59), 0, 0))
                 .RuleFor(j => j.JarmuId, f => f.PickRandom(jarmuIdk))
-                .RuleFor(j => j.VonalId, f => f.PickRandom(vonalIdk))
-                .RuleFor(j => j.HirdetesekFolyamatban, (f, current) => new List<HirdetesFolyamatban>(
-                    f.PickRandom(hirdetesIdk, f.Random.Number(0, hirdetesIdk.Count)).Select(id =>
-                        new HirdetesFolyamatban {
-                            HirdetesId = id,
-                            Jarat = current,
-                        }
-                    )
-                ));
+                .RuleFor(j => j.VonalId, f => f.PickRandom(vonalIdk));
 
             for (int i = 0; i < 5; i++) {
                 var jarat = jaratFaker.Generate();

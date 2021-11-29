@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace HirdetoRendszer.Dal.Model
 {
@@ -19,6 +18,9 @@ namespace HirdetoRendszer.Dal.Model
         public int JarmuId { get; set; }
         [ForeignKey("JarmuId")]
         public Jarmu Jarmu { get; set; }
+
+        [Column(TypeName = "Date")]
+        public DateTime Datum { get; set; }
 
         public TimeSpan JaratIndulas { get; set; }
 
