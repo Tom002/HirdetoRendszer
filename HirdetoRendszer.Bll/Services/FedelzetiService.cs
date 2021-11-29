@@ -210,13 +210,17 @@ namespace HirdetoRendszer.Bll.Services
                     var idotartamKivagasEredmeny = IdotartamKivagas(lehetsegesHirdetesIdotartamok, hirdetesIdotartam);
                     if(idotartamKivagasEredmeny.KivagottIdotartamok.Any())
                     {
+                        var engedelyezettIdotartamHossz = idotartamKivagasEredmeny.KivagottIdotartamok
+                            .Select(i => (int)(i.Veg - i.Kezdet).TotalMinutes)
+                            .Sum();
+
                         var megjelenitentoHirdetes = new MegjelenitendoHirdetesDto
                         {
                             HirdetesId = hirdetes.HirdetesId,
-                            MegjelenitesiSzazalek = (lehetsegesHirdetesMaxHosszal.MaxIdotartam / (double)hosszOsszeg) * 100,
                             MaxMegjelenitesPerc = lehetsegesHirdetesMaxHosszal.MaxIdotartam,
                             KepUrlek = hirdetes.HirdetesKepek.Select(h => h.Kep.Url).ToList(),
-                            EngedelyezettIdotartamok = idotartamKivagasEredmeny.KivagottIdotartamok
+                            EngedelyezettIdotartamok = idotartamKivagasEredmeny.KivagottIdotartamok,
+                            EngedelyezettIdotartamHossz = engedelyezettIdotartamHossz
                         };
 
                         hirdetesCsoport.MegjelenitendoKepek.Add(megjelenitentoHirdetes);
@@ -225,13 +229,16 @@ namespace HirdetoRendszer.Bll.Services
                         {
                             JaratId = jarat.JaratId,
                             HirdetesId = hirdetes.HirdetesId,
-                            LefoglaltPerc = (int)Math.Ceiling(hirdetesCsoport.TervezettMenetidoPerc * (megjelenitentoHirdetes.MegjelenitesiSzazalek / 100))
+                            LefoglaltPerc = megjelenitentoHirdetes.EngedelyezettIdotartamHossz
                         });
                     }
+                }
 
-                    
-
-                    
+                var engedelyezettIdotartamOsszeg = hirdetesCsoport.MegjelenitendoKepek.Sum(h => h.EngedelyezettIdotartamHossz);
+                if(engedelyezettIdotartamOsszeg != 0)
+                {
+                    foreach (var hirdetes in hirdetesCsoport.MegjelenitendoKepek)
+                        hirdetes.MegjelenitesiSzazalek = (hirdetes.EngedelyezettIdotartamHossz / engedelyezettIdotartamOsszeg) * 100;
                 }
 
                 await _dbContext.SaveChangesAsync();
@@ -253,7 +260,7 @@ namespace HirdetoRendszer.Bll.Services
             {
                 var kovetkeoSzabadIdotartam = szabadIdotartamok.First();
                 szabadIdotartamok.Remove(kovetkeoSzabadIdotartam);
-                var kovetkeoSzabadIdotartamHossz = (kovetkeoSzabadIdotartam.Veg - kovetkeoSzabadIdotartam.Kezdet).Minutes;
+                var kovetkeoSzabadIdotartamHossz = (int)(kovetkeoSzabadIdotartam.Veg - kovetkeoSzabadIdotartam.Kezdet).TotalMinutes;
 
                 if (idoablakPerc >= kovetkeoSzabadIdotartamHossz)
                 {
