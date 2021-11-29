@@ -1,4 +1,4 @@
-﻿using Bogus;
+using Bogus;
 using HirdetoRendszer.Bll.Interfaces;
 using HirdetoRendszer.Common.Enum;
 using HirdetoRendszer.Dal.DbContext;
@@ -17,6 +17,7 @@ namespace HirdetoRendszer.Bll.Services
         private readonly UserManager<Felhasznalo> _userManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
         private readonly HirdetoRendszerDbContext _dbContext;
+        private readonly IAuthService _authService;
 
         private int vonalakSzama = 20;
         private int allomasVonalankent = 5;
@@ -28,11 +29,13 @@ namespace HirdetoRendszer.Bll.Services
         public SeedService(
             UserManager<Felhasznalo> userManager,
             RoleManager<IdentityRole<int>> roleManager,
-            HirdetoRendszerDbContext dbContext)
+            HirdetoRendszerDbContext dbContext,
+            IAuthService authService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _dbContext = dbContext;
+            _authService = authService;
         }
 
         private static List<string> GetRoles()
@@ -41,7 +44,8 @@ namespace HirdetoRendszer.Bll.Services
             {
                 FelhasznaloTipus.Hirdeto.ToString(),
                 FelhasznaloTipus.KozlekedesiVallalat.ToString(),
-                FelhasznaloTipus.HirdetesSzervezoCeg.ToString()
+                FelhasznaloTipus.HirdetesSzervezoCeg.ToString(),
+                FelhasznaloTipus.FedelzetiRendszer.ToString(),
             };
         }
 
@@ -89,8 +93,7 @@ namespace HirdetoRendszer.Bll.Services
                 await _userManager.AddToRoleAsync(kozlekedesiVallalat, FelhasznaloTipus.KozlekedesiVallalat.ToString());
                 await _dbContext.SaveChangesAsync();
 
-                var hirdetesKezelo = new Felhasznalo
-                {
+                var hirdetesKezelo = new Felhasznalo {
                     Email = "hirdetesKezelo@test.hu",
                     UserName = "hirdetesKezelo@test.hu",
                     KeresztNev = "Ádám",
@@ -100,6 +103,18 @@ namespace HirdetoRendszer.Bll.Services
                 };
                 await _userManager.CreateAsync(hirdetesKezelo, tesztJelszo);
                 await _userManager.AddToRoleAsync(hirdetesKezelo, FelhasznaloTipus.HirdetesSzervezoCeg.ToString());
+                await _dbContext.SaveChangesAsync();
+
+                var fedelzetiRendszer = new Felhasznalo {
+                    Email = "fedelzet@test.hu",
+                    UserName = "fedelzet@test.hu",
+                    KeresztNev = "FR-001",
+                    VezetekNev = "",
+                    EmailConfirmed = true,
+                    FelhasznaloTipus = FelhasznaloTipus.FedelzetiRendszer
+                };
+                await _userManager.CreateAsync(fedelzetiRendszer, tesztJelszo);
+                await _userManager.AddToRoleAsync(fedelzetiRendszer, FelhasznaloTipus.FedelzetiRendszer.ToString());
                 await _dbContext.SaveChangesAsync();
             }
         }
@@ -175,6 +190,160 @@ namespace HirdetoRendszer.Bll.Services
                 var jarmu = jarmuFaker.Generate();
 
                 _dbContext.Jarmuvek.Add(jarmu);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task SeedHirdetesek() {
+            var hirdeto = await _authService.GetFelhasznaloByEmail("hirdeto@test.hu");
+            if (hirdeto is null) {
+                return;
+            }
+            Console.WriteLine(hirdeto.Id);
+
+            var haviElofizetesFaker = new Faker<HaviElofizetes>()
+                .RuleFor(he => he.HaviLimit, f => f.Random.Number(0, 1000))
+                .RuleFor(he => he.Aktiv, f => f.Random.Bool(0.3f));
+
+            var haviElofizetesReszletekFaker = new Faker<HaviElofizetesReszletek>()
+                .RuleFor(her => her.ElhasznaltPercek, f => f.Random.Number(20, 120))
+                .RuleFor(her => her.Honap, f => f.Date.Past(1));
+
+            var mennyisegiElofizetesFaker = new Faker<MennyisegiElofizetes>()
+                .RuleFor(me => me.ElhasznaltIdotartam, f => f.Random.Number(0, 1000))
+                .RuleFor(me => me.VasaroltIdotartam, (f, current) => f.Random.Number(current.ElhasznaltIdotartam, 1100));
+
+            var hirdetesFaker = new Faker<Hirdetes>()
+                .RuleFor(h => h.IdohozKotott, _ => true)
+                .RuleFor(h => h.ErvenyessegKezdet, f => new TimeSpan(0, f.Random.Number(0, 22), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(h => h.ErvenyessegVeg, (f, current) => new TimeSpan(0, f.Random.Number(current.ErvenyessegKezdet.Value.Hours + 1, 23), f.Random.Number(0, 59), 0, 0));
+
+            for (int i = 0; i < 5; i++) {
+                var mennyisegiElofizetes = mennyisegiElofizetesFaker.Generate();
+                _dbContext.MennyisegiElofizetesek.Add(mennyisegiElofizetes);
+                var hirdetes = hirdetesFaker.Generate();
+                hirdetes.Elofizetes = mennyisegiElofizetes;
+                hirdetes.Felhasznalo = hirdeto;
+                _dbContext.Hirdetesek.Add(hirdetes);
+
+                var kepek = await _dbContext.Kepek.Where(k => k.FeltoltoFelhasznalo == hirdeto).ToListAsync();
+                var kivalasztottKepek = new Faker().PickRandom(kepek, kepek.Count / 2);
+
+                foreach (var kivalasztottKep in kivalasztottKepek) {
+                    var kepToHirdetes = new KepToHirdetes() {
+                        Hirdetes = hirdetes,
+                        Kep = kivalasztottKep,
+                    };
+                    _dbContext.KepToHirdetes.Add(kepToHirdetes);
+                }
+
+                var vonalak = await _dbContext.Vonalak.ToListAsync();
+                var kivalasztottVonalak = new Faker().PickRandom(vonalak, vonalak.Count / 2);
+                foreach (var kivalasztottVonal in kivalasztottVonalak) {
+                    var hirdetesToVonal = new HirdetesToVonal() { 
+                        Hirdetes = hirdetes,
+                        Vonal = kivalasztottVonal,
+                    };
+                    _dbContext.HirdetesToVonal.Add(hirdetesToVonal);
+                }
+            }
+
+            for (int i = 0; i < 5; i++) {
+                var haviElofizetes = haviElofizetesFaker.Generate();
+                _dbContext.HaviElofizetesek.Add(haviElofizetes);
+                var hirdetes = hirdetesFaker.Generate();
+                hirdetes.Elofizetes = haviElofizetes;
+                hirdetes.Felhasznalo = hirdeto;
+                _dbContext.Hirdetesek.Add(hirdetes);
+
+                var kepek = await _dbContext.Kepek.Where(k => k.FeltoltoFelhasznalo == hirdeto).ToListAsync();
+                var kivalasztottKepek = new Faker().PickRandom(kepek, kepek.Count / 2);
+
+                foreach (var kivalasztottKep in kivalasztottKepek) {
+                    var kepToHirdetes = new KepToHirdetes() {
+                        Hirdetes = hirdetes,
+                        Kep = kivalasztottKep,
+                    };
+                    _dbContext.KepToHirdetes.Add(kepToHirdetes);
+                }
+
+                for (int j = 0; j < 10; j++) {
+                    var haviElofizetesReszletek = haviElofizetesReszletekFaker.Generate();
+                    haviElofizetesReszletek.HaviElofizetes = haviElofizetes;
+                    _dbContext.HaviElofizetesReszletek.Add(haviElofizetesReszletek);
+                }
+
+                var vonalak = await _dbContext.Vonalak.ToListAsync();
+                var kivalasztottVonalak = new Faker().PickRandom(vonalak, vonalak.Count / 2);
+                foreach (var kivalasztottVonal in kivalasztottVonalak) {
+                    var hirdetesToVonal = new HirdetesToVonal() {
+                        Hirdetes = hirdetes,
+                        Vonal = kivalasztottVonal,
+                    };
+                    _dbContext.HirdetesToVonal.Add(hirdetesToVonal);
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task SeedHirdetesHelyettesitok()
+        {
+            var kozlekedesiVallalat = await _authService.GetFelhasznaloByEmail(kozlekedesiVallalatTestFiok);
+            if (kozlekedesiVallalat is null)
+            {
+                return;
+            }
+
+            var jarmuIdk = await _dbContext.Jarmuvek.Select(j => j.JarmuId).ToListAsync();
+            var hirdetesHelyettesitoKepIdk = await _dbContext.Kepek
+                .Where(k => k.FeltoltoFelhasznaloId == kozlekedesiVallalat.Id)
+                .Select(k => k.KepId)
+                .ToListAsync();
+
+            var hirdetesHelyettesitoFaker = new Faker<HirdetesHelyettesito>()
+                .RuleFor(h => h.Aktiv, _ => true)
+                .RuleFor(h => h.CreatedAt, _ => DateTime.Now)
+                .RuleFor(h => h.MindenJarmure, _ => true)
+                .RuleFor(h => h.IdohozKotott, _ => true)
+                .RuleFor(h => h.ErvenyessegKezdet, f => new TimeSpan(0, f.Random.Number(0, 22), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(j => j.ErvenyessegVeg, (f, current) => new TimeSpan(0, f.Random.Number(current.ErvenyessegKezdet.Value.Hours + 1, Math.Min(23, current.ErvenyessegKezdet.Value.Hours + 5)), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(j => j.HirdetesHelyettesitoKepek, (f, current) => new List<KepToHirdetesHelyettesito>(
+                    f.PickRandom(hirdetesHelyettesitoKepIdk, f.Random.Number(0, hirdetesHelyettesitoKepIdk.Count)).Select(id =>
+                        new KepToHirdetesHelyettesito
+                        {
+                            KepId = id,
+                            HirdetesHelyettesito = current
+                        }
+                    )
+                ));
+
+            for (int i = 0; i < 5; i++)
+            {
+                var hirdetesHelyettesito = hirdetesHelyettesitoFaker.Generate();
+                _dbContext.HirdetesHelyettesitok.Add(hirdetesHelyettesito);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+
+        public async Task SeedJaratok() {
+            var jarmuIdk = await _dbContext.Jarmuvek.Select(j => j.JarmuId).ToListAsync();
+            var vonalIdk = await _dbContext.Vonalak.Select(j => j.VonalId).ToListAsync();
+            var hirdetesIdk = await _dbContext.Hirdetesek.Select(j => j.HirdetesId).ToListAsync();
+
+            var jaratFaker = new Faker<Jarat>()
+                .RuleFor(j => j.Datum, f => f.Date.Future(yearsToGoForward: 1))
+                .RuleFor(j => j.JaratIndulas, f => new TimeSpan(0, f.Random.Number(0, 22), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(j => j.JaratErkezes, (f, current) => new TimeSpan(0, f.Random.Number(current.JaratIndulas.Hours + 1, 23), f.Random.Number(0, 59), 0, 0))
+                .RuleFor(j => j.JarmuId, f => f.PickRandom(jarmuIdk))
+                .RuleFor(j => j.VonalId, f => f.PickRandom(vonalIdk));
+
+            for (int i = 0; i < 5; i++) {
+                var jarat = jaratFaker.Generate();
+                _dbContext.Jaratok.Add(jarat);
             }
 
             await _dbContext.SaveChangesAsync();

@@ -8,6 +8,7 @@ using HirdetoRendszer.Common.Enum;
 using HirdetoRendszer.Common.Exceptions;
 using HirdetoRendszer.Dal.DbContext;
 using HirdetoRendszer.Dal.Model;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -65,12 +66,12 @@ namespace HirdetoRendszer.Bll.Services
                 throw new ValidationException(new List<ValidationError> { new ValidationError("VonalIdLista", "Nem minden vonal id érvényes") });
 
             var kepek = await _dbContext.Kepek
-                .Where(kep => hirdetesHozzaadas.HirdetesKepIdLista.Contains(kep.KepId))
+                .Where(kep => hirdetesHozzaadas.KepIdLista.Contains(kep.KepId))
                 .Where(kep => kep.FeltoltoFelhasznaloId == felhasznaloId)
                 .ToListAsync();
 
-            if (kepek.Count() != hirdetesHozzaadas.HirdetesKepIdLista.Count())
-                throw new ValidationException(new List<ValidationError> { new ValidationError("HirdetesKepIdLista", "Nem minden kép id érvényes") });
+            if (kepek.Count() != hirdetesHozzaadas.KepIdLista.Count())
+                throw new ValidationException(new List<ValidationError> { new ValidationError("KepIdLista", "Nem minden kép id érvényes") });
 
             var hirdetes = new Hirdetes()
             {
@@ -78,6 +79,7 @@ namespace HirdetoRendszer.Bll.Services
                 ErvenyessegKezdet = new TimeSpan(0, hirdetesHozzaadas.ErvenyessegKezdetOra.Value, hirdetesHozzaadas.ErvenyessegKezdetPerc.Value, 0, 0),
                 ErvenyessegVeg = new TimeSpan(0, hirdetesHozzaadas.ErvenyessegVegOra.Value, hirdetesHozzaadas.ErvenyessegVegPerc.Value, 0, 0),
                 FelhasznaloId = felhasznaloId,
+                LetrehozasDatum = DateTime.Now
             };
 
             foreach (var kep in kepek)
@@ -104,12 +106,35 @@ namespace HirdetoRendszer.Bll.Services
                 .SingleAsync(h => h.HirdetesId == hirdetes.HirdetesId);
         }
 
-        public async Task<PageResponse<HirdetesDto>> HirdetesListazas(PageRequest pageRequest)
+        public async Task<PageResponse<HirdetesDto>> HirdetesekListazasa(PageRequest pageRequest)
         {
             return await _dbContext.Hirdetesek
                 .ProjectTo<HirdetesDto>(_mapper.ConfigurationProvider)
                 .ToPagedListAsync(pageRequest);
         }
+
+        public async Task HirdetesLemondas(int hirdetesId) {
+            var felhasznaloId = _requestContext.FelhasznaloId;
+
+            var hirdetes = await _dbContext.Hirdetesek
+                .Include(h=>h.Elofizetes)
+                .SingleOrDefaultAsync(h => h.HirdetesId == hirdetesId)
+                ?? throw new EntityNotFoundException($"Hirdetés {hirdetesId} nem található");
+
+            if (hirdetes.FelhasznaloId != felhasznaloId) {
+                throw new ForbiddenException("Más felhasználó hirdetése nem mondható le");
+            }
+
+            if (hirdetes.Elofizetes.ElofizetesTipus != ElofizetesTipus.Havi) {
+                throw new BusinessException("Mennyiségi előfizetésű hirdetés nem mondható le");
+            }
+
+            var haviElofizetes = (HaviElofizetes)hirdetes.Elofizetes;
+            haviElofizetes.Aktiv = false;
+
+            await _dbContext.SaveChangesAsync();
+        }
+
 
         public async Task HirdetesTorles(int hirdetesId)
         {

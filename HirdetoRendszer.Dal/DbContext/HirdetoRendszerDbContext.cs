@@ -40,6 +40,8 @@ namespace HirdetoRendszer.Dal.DbContext
 
         public DbSet<AllomasToVonal> AllomasToVonal { get; set; }
 
+        public DbSet<HirdetesToVonal> HirdetesToVonal { get; set; }
+
         public HirdetoRendszerDbContext(DbContextOptions options)
             : base(options)
         {
@@ -148,6 +150,10 @@ namespace HirdetoRendszer.Dal.DbContext
                 .WithMany(v => v.HirdetesToVonal)
                 .HasForeignKey(hv => hv.VonalId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<HirdetesHelyettesito>()
+                .Property(hh => hh.CreatedAt)
+                .HasDefaultValueSql("getdate()");
 
             base.OnModelCreating(modelBuilder);
         }

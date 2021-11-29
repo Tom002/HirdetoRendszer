@@ -73,7 +73,7 @@ namespace HirdetoRendszer.Bll.Services
             throw new BusinessException("Unexpected error while creating token");
         }
 
-        private async Task<Felhasznalo> GetFelhasznaloByEmail(string email)
+        public async Task<Felhasznalo> GetFelhasznaloByEmail(string email)
             => await _dbContext.Users.FirstOrDefaultAsync(a => a.Email == email);
 
         private async Task CheckSignInCredentials(Felhasznalo user, string password)

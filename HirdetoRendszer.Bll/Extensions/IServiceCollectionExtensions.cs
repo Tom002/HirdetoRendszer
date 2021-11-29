@@ -31,6 +31,8 @@ namespace HirdetoRendszer.Bll.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IHirdetesService, HirdetesService>();
             services.AddScoped<IHirdetoService, HirdetoService>();
+            services.AddScoped<IHirdetesHelyettesitoService, HirdetesHelyettesitoService>();
+            services.AddScoped<IFedelzetiService, FedelzetiService>();
 
             services.AddTransient<ISeedService, SeedService>();
 

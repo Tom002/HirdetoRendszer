@@ -1,8 +1,8 @@
-﻿using System;
+﻿using HirdetoRendszer.Common.Enum;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace HirdetoRendszer.Dal.Model
 {
@@ -19,6 +19,15 @@ namespace HirdetoRendszer.Dal.Model
         [ForeignKey("JarmuId")]
         public Jarmu Jarmu { get; set; }
 
+        [Column(TypeName = "Date")]
+        public DateTime Datum { get; set; }
+
+        public TimeSpan JaratIndulas { get; set; }
+
+        public TimeSpan JaratErkezes { get; set; }
+
         public ICollection<HirdetesFolyamatban> HirdetesekFolyamatban { get; set; } = new List<HirdetesFolyamatban>();
+
+        public JaratAllapot JaratAllapot { get; set; } = JaratAllapot.IndulasElott;
     }
 }

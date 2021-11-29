@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
+using HirdetoRendszer.Bll.Dto.Common;
 using HirdetoRendszer.Bll.Dto.Elofizetes;
+using HirdetoRendszer.Bll.Dto.Fedelzeti;
 using HirdetoRendszer.Bll.Dto.Hirdetes;
+using HirdetoRendszer.Bll.Dto.Jarmu;
 using HirdetoRendszer.Bll.Dto.Kep;
 using HirdetoRendszer.Bll.Dto.Vonal;
 using HirdetoRendszer.Common.Enum;
@@ -23,7 +26,23 @@ namespace HirdetoRendszer.Bll.Mapping
 
             // Hirdetes
 
-            CreateMap<Hirdetes, HirdetesDto>();
+            CreateMap<Hirdetes, HirdetesDto>()
+                .ForMember(dest => dest.Ervenyesseg, opt => opt.MapFrom(
+                    src => (src.ErvenyessegKezdet.HasValue && src.ErvenyessegVeg.HasValue) ? new IdotartamDto() {
+                        Kezdet = src.ErvenyessegKezdet.Value,
+                        Veg = src.ErvenyessegVeg.Value,
+                    } : null
+                ));
+
+            // Hirdetés helyettesítő
+
+            CreateMap<HirdetesHelyettesito, HirdetesHelyettesitoDto>()
+                .ForMember(dest => dest.Ervenyesseg, opt => opt.MapFrom(
+                    src => (src.ErvenyessegKezdet.HasValue && src.ErvenyessegVeg.HasValue) ? new IdotartamDto() {
+                        Kezdet = src.ErvenyessegKezdet.Value,
+                        Veg = src.ErvenyessegVeg.Value,
+                    }: null
+                ));
 
             // Kep
 
@@ -32,6 +51,12 @@ namespace HirdetoRendszer.Bll.Mapping
 
             CreateMap<KepToHirdetesHelyettesito, KepDto>()
                 .ForMember(dest => dest.Url, opt => opt.MapFrom(src => src.Kep.Url));
+
+            // Jarmu
+
+            CreateMap<HirdetesHelyettesitoToJarmu, JarmuDto>()
+                .ForMember(dest => dest.Azonosito, opt => opt.MapFrom(src => src.Jarmu.Azonosito))
+                .ForMember(dest => dest.JarmuTipus, opt => opt.MapFrom(src => src.Jarmu.JarmuTipus));
 
             // Elofizetes
 

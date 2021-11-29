@@ -13,9 +13,13 @@ namespace HirdetoRendszer.Dal.Model
 
         public ICollection<HirdetesToVonal> HirdetesToVonal { get; set; } = new List<HirdetesToVonal>();
 
+        public bool MindenVonalra { get; set; }
+
         public int FelhasznaloId { get; set; }
         [ForeignKey("FelhasznaloId")]
         public Felhasznalo Felhasznalo { get; set; }
+
+        public bool IdohozKotott { get; set; }
 
         [Column(TypeName = "bigint")]
         public TimeSpan? ErvenyessegKezdet { get; set; }
@@ -28,6 +32,8 @@ namespace HirdetoRendszer.Dal.Model
         public ICollection<HirdetesFolyamatban> HirdetesekFolyamatban { get; set; } = new List<HirdetesFolyamatban>();
 
         public Elofizetes Elofizetes { get; set; }
+
+        public DateTime LetrehozasDatum { get; set; }
 
         public bool SoftDeleted { get; set; } = false;
     }

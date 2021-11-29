@@ -44,6 +44,9 @@ namespace HirdetoRendszer
                     await seedService.SeedAllomasokAndVonalak();
                     await seedService.SeedJarmuvek();
                     await seedService.SeedHirdetesKepek();
+                    await seedService.SeedHirdetesek();
+                    await seedService.SeedHirdetesHelyettesitok();
+                    await seedService.SeedJaratok();
                 }
 
                 await host.RunAsync();
