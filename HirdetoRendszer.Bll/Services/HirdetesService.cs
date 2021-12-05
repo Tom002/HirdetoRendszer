@@ -79,7 +79,9 @@ namespace HirdetoRendszer.Bll.Services
                 ErvenyessegKezdet = new TimeSpan(0, hirdetesHozzaadas.ErvenyessegKezdetOra.Value, hirdetesHozzaadas.ErvenyessegKezdetPerc.Value, 0, 0),
                 ErvenyessegVeg = new TimeSpan(0, hirdetesHozzaadas.ErvenyessegVegOra.Value, hirdetesHozzaadas.ErvenyessegVegPerc.Value, 0, 0),
                 FelhasznaloId = felhasznaloId,
-                LetrehozasDatum = DateTime.Now
+                LetrehozasDatum = DateTime.Now,
+                MindenVonalra = hirdetesHozzaadas.MindenVonalra,
+                IdohozKotott = hirdetesHozzaadas.IdosavhozKotott
             };
 
             foreach (var kep in kepek)

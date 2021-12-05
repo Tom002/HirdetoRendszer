@@ -69,8 +69,8 @@ namespace HirdetoRendszer.Bll.Mapping
                 .ForMember(
                     dest => dest.VasaroltIdotartam,
                     opt => opt.MapFrom(src => src.ElofizetesTipus == ElofizetesTipus.Mennyisegi
-                        ? ((MennyisegiElofizetes)src).VasaroltIdotartam
-                        : default))
+                        ? (int?)((MennyisegiElofizetes)src).VasaroltIdotartam
+                        : null))
                 .ForMember(
                     dest => dest.HaviLimit,
                     opt => opt.MapFrom(src => src.ElofizetesTipus == ElofizetesTipus.Havi

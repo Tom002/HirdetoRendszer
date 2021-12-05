@@ -29,7 +29,7 @@ namespace HirdetoRendszer.Bll.Dto.Auth
         [Required]
         public string Jelszo { get; set; }
         [Required]
-        [Compare("Password", ErrorMessage = "Password and Confirmation Password must match.")]
+        [Compare("Jelszo", ErrorMessage = "Password and Confirmation Password must match.")]
         public string JelszoUjra { get; set; }
     }
 }

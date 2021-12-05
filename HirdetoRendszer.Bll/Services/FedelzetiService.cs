@@ -122,7 +122,7 @@ namespace HirdetoRendszer.Bll.Services
                     .Where(h => h.MindenVonalra || h.HirdetesToVonal.Any(h => h.VonalId == jarat.VonalId))
                     .Where(h =>
                         !h.IdohozKotott ||
-                        (h.ErvenyessegKezdet.Value >= jarat.JaratIndulas && h.ErvenyessegKezdet.Value < jarat.JaratIndulas) ||
+                        (h.ErvenyessegKezdet.Value >= jarat.JaratIndulas && h.ErvenyessegKezdet.Value < jarat.JaratErkezes) ||
                         (h.ErvenyessegVeg.Value > jarat.JaratIndulas && h.ErvenyessegVeg.Value <= jarat.JaratErkezes))
                     .ToListAsync();
 
@@ -243,7 +243,7 @@ namespace HirdetoRendszer.Bll.Services
                 if(engedelyezettIdotartamOsszeg != 0)
                 {
                     foreach (var hirdetes in hirdetesCsoport.MegjelenitendoKepek)
-                        hirdetes.MegjelenitesiSzazalek = (hirdetes.EngedelyezettIdotartamHossz / engedelyezettIdotartamOsszeg) * 100;
+                        hirdetes.MegjelenitesiSzazalek = ((double)hirdetes.EngedelyezettIdotartamHossz / engedelyezettIdotartamOsszeg) * 100;
                 }
 
                 await _dbContext.SaveChangesAsync();
@@ -404,6 +404,10 @@ namespace HirdetoRendszer.Bll.Services
                         Veg = ujIdotartam.Kezdet
                     });
                 }
+                else if(ujIdotartam.Kezdet <= regiIdotartam.Kezdet && ujIdotartam.Veg >= regiIdotartam.Veg)
+                {
+                    kivagottIdotartamok.Add(regiIdotartam);
+                }
 
                 // Ha keletkezett üres időtartam, megszabadulunk tőle
                 ujIdotartamok.RemoveAll(i => i.Kezdet == i.Veg);
@@ -443,7 +447,7 @@ namespace HirdetoRendszer.Bll.Services
 
             foreach (var megjelenitettHirdetes in megjelenitettHirdetesek) {
 
-                var hirdetesFolyamatban = hirdetesekFolyamatban.SingleOrDefault()
+                var hirdetesFolyamatban = hirdetesekFolyamatban.SingleOrDefault(h => h.HirdetesId == megjelenitettHirdetes.HirdetesId)
                     ?? throw new EntityNotFoundException($"Hirdetés {megjelenitettHirdetes.HirdetesId} nem kerülhetett megjelenítésre a járaton");
 
                 if (hirdetesFolyamatban.Hirdetes.Elofizetes.ElofizetesTipus == ElofizetesTipus.Mennyisegi) 
